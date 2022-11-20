@@ -4,6 +4,8 @@ from discord.ext import commands
 import os
 import shutil
 import json
+import copy
+import asyncio
 
 import configuration
 
@@ -37,7 +39,8 @@ bot_id = configuration.bot_id
 
 
 # global variables
-for
+
+
 ## Добавить создание каналов в после серии ненужных (т.е)
 # идёт серия каналов с названием авиаРБ, такнРБ будут создаваться только после каналов с авиаРБ и так далее
 
@@ -87,37 +90,40 @@ async def on_ready():
                 embed.set_thumbnail(url='https://memepedia.ru/wp-content/uploads/2018/08/dlydryywsaa1jp8-768x576.jpg')
                 embed.set_footer(text='© WTServer 2022')
 
-                await text_channel.purge(limit=10, check=lambda message: message.author.id == bot_id)
-                await text_channel.send(embed=embed, view=VoiceButtons())
+                #await text_channel.purge(limit=10, check=lambda message: message.author.id == bot_id)
+                #await text_channel.send(embed=embed, view=VoiceButtons())
 
     # Удаляет пустые голосовые каналы после запуска бота
     for guild_id in os.listdir(path=data_path):
         guild_path = os.sep.join([data_path, str(guild_id)])
+        canal_txt_copy = copy.copy(canals_txt)
         for canal in canals_txt:
             main_text_canal = canal.split(':')[0]
             created_voice_canal = canal.split(':')[1]
             created_voice_canal_admin = canal.split(':')[2].replace('\n', '')
             channel  = bot.get_channel(int(created_voice_canal))
             if channel is None:
-                canals_txt.remove(canal)
+                canal_txt_copy.remove(canal)
                 with open(os.sep.join([guild_path, 'canals.txt']), 'w') as f_in:
-                    for canal_to in canals_txt:
+                    for canal_to in canal_txt_copy:
                         f_in.write(canal_to + '\n')
-            members_id = []
-            for member in channel.members:
-                members_id.append(str(member.id))
-            if len(members_id) == 0:
-                await channel.delete()
-                canals_txt.remove(canal)
-                with open(os.sep.join([guild_path, 'canals.txt']), 'w') as f_in:
-                    for canal_to in canals_txt:
-                        f_in.write(canal_to + '\n')
-            elif created_voice_canal_admin not in members_id:
-                result = f"{main_text_canal}:{created_voice_canal}:{members_id[0]}"
-                canals_txt[canals_txt.index(canal)] = result
-                with open(os.sep.join([guild_path, 'canals.txt']), 'w') as f_in:
-                    for canal_to in canals_txt:
-                        f_in.write(canal_to + '\n')
+            else:
+                members_id = []
+                for member in channel.members:
+                    members_id.append(str(member.id))
+                if len(members_id) == 0:
+                    await channel.delete()
+                    canal_txt_copy.remove(canal)
+                    with open(os.sep.join([guild_path, 'canals.txt']), 'w') as f_in:
+                        for canal_to in canal_txt_copy:
+                            f_in.write(canal_to + '\n')
+                elif created_voice_canal_admin not in members_id:
+                    result = f"{main_text_canal}:{created_voice_canal}:{members_id[0]}"
+                    canal_txt_copy[canal_txt_copy.index(canal)] = result
+                    with open(os.sep.join([guild_path, 'canals.txt']), 'w') as f_in:
+                        for canal_to in canal_txt_copy:
+                            f_in.write(canal_to + '\n')
+        canals_txt = copy.copy(canal_txt_copy)
 
     print(main_canals_json)
     print(canals_txt)
@@ -188,8 +194,8 @@ async def reg(ctx):
                 embed.set_thumbnail(url='https://memepedia.ru/wp-content/uploads/2018/08/dlydryywsaa1jp8-768x576.jpg')
                 embed.set_footer(text='© WTServer 2022')
 
-                voice_control_settings = bot.get_channel(int(text_channel))
-                await voice_control_settings.send(embed=embed, view=VoiceButtons())
+                #voice_control_settings = bot.get_channel(int(text_channel))
+                #await voice_control_settings.send(embed=embed, view=VoiceButtons())
 
             embed = discord.Embed(
                 title="Мастер настройки voice_bot",
@@ -480,6 +486,8 @@ async def reset(ctx):
         return
 
     async def reset_settings_button_callback(interaction):
+        global main_canals_json
+
         guild_id = interaction.guild.id
         guild_path = os.sep.join([data_path, str(guild_id)])
         if str(guild_id) in os.listdir(path=data_path):
@@ -490,6 +498,7 @@ async def reset(ctx):
             # Зачищает переменную от управляющих каналов.
             text_reset_channels = []
             deleted_channels_string = ""
+            main_canals_json_copy = copy.copy(main_canals_json)
             for main_canal_json in main_canals_json:
                 if main_canal_json == main_canal_json_to_delete:
                     for data_in_mcj in main_canal_json:
@@ -501,7 +510,8 @@ async def reset(ctx):
                         Или написать инфу от лица админов"""
                         await text_reset_channel.purge(limit=10, check=lambda message: message.author.id == bot_id)
                         deleted_channels_string = deleted_channels_string + f"<#{data_in_mcj}>\n"
-                    main_canals_json.remove(main_canal_json_to_delete)
+                    main_canals_json_copy.remove(main_canal_json_to_delete)
+            main_canals_json = copy.copy(main_canals_json_copy)
 
             embed = discord.Embed(
                 title="Сброс настроек voice_bot",
@@ -770,17 +780,26 @@ async def on_voice_state_update(member, before, after):
                 # print(f"after: {after.channel.id} admin: {member.id}")
                 reference = bot.get_channel(after.channel.id)  # берем какой-нибудь канал за "основу"
                 voice_channel = await member.guild.create_voice_channel(
-                    name=f"{member.name}'s {after.channel.name.partition(' ')[2]}",
-                    position=reference.position,  # создаём канал под "основой"
+                    name=f"{after.channel.name.replace('➕','● ')}",
+                    #position=reference.position,  # создаём канал под "основой"
                     category=reference.category,  # в категории канала-"основы"
-                    reason="voice_bot",  # С причиной "ABC" (отображается в Audit Log)
+                    reason="voice_bot",  # (отображается в Audit Log)
                 )
-                await member.move_to(voice_channel)
                 # Управляющий текстовый:Созданный голосовой:Админ
                 result = f"{text_channel}:{voice_channel.id}:{member.id}"
                 canals_txt.append(result)
                 with open(os.sep.join([guild_path, 'canals.txt']), 'a') as f_in:
                     f_in.write(result + '\n')
+                await member.move_to(voice_channel)
+                await asyncio.sleep(10)
+                if voice_channel is not None and len(voice_channel.members) == 0:
+                    await voice_channel.delete()
+                    canals_txt.remove(result)
+                    with open(os.sep.join([guild_path, 'canals.txt']), 'w') as f_in:
+                        for canal_to in canals_txt:
+                            f_in.write(canal_to + '\n')
+
+
 
     # before использовать для тех кто покидает канал созданный ботом.
     for canal in canals_txt:
