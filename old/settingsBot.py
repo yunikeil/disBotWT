@@ -103,7 +103,7 @@ class VoiceButtons(discord.ui.View):
     async def checkCanal(interaction):
         # Сюда добавить проверку является ли КАНАЛ ПОД УПРАВЛЕНИЕ БОТА
         # Для тестирование установлено значение вручную созданного канала.
-        created_our_servers = [1041389445217275904, 1041389483888746577]
+        created_our_servers = [1042059323746046043, 1042060242231500891]
         if interaction.user.voice and interaction.user.voice.channel.id in created_our_servers:
             return True, interaction.user.voice.channel.id
         else:
@@ -190,7 +190,7 @@ async def on_ready():
     await voice_control_text.purge()
     embed = discord.Embed(
         title="Бот для голосовых",
-        colour=discord.Colour.blurple(),
+        colour=discord.Colour.red(),
         description=f"Чат для управления: <#{1042058995663392768}>\n"
                     f"Главный голосовой чат: <#{1042059323746046043}>\n"
     )
@@ -206,4 +206,4 @@ async def on_ready():
 
 ## Почитать про ограничения дискорда на отправку запросов, сделать ограничения на слишком частые запросы для
 # пользователей, 1, 2, 3 - можно сразу сделать, следующие только по прошествию минуты
-bot.run('MTAzNzQ3NzYzMzQxMzM0OTQwNg.Gkf8md.qskApsB1XKWa7d3A4zOKdzszi3r8yhXqlGUwnk')
+bot.run('MTAzNzQ3NzYzMzQxMzM0OTQwNg.GYfQls.5wj55LV8mcPWTcHyz--Ip8O48ngO9D_iExZAWE')

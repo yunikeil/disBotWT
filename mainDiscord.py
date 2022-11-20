@@ -5,6 +5,8 @@ import os
 import shutil
 import json
 
+import configuration
+
 bot = commands.Bot(command_prefix='>', intents=discord.Intents.all())
 
 # global variables
@@ -30,8 +32,8 @@ data_path ========>
 """
 main_canals_json = []
 canals_txt = []
-data_path = os.getcwd() + '\\data'
-bot_id = 1037477633413349406
+data_path = configuration.data_path
+bot_id = configuration.bot_id
 
 
 # global variables
@@ -46,22 +48,22 @@ async def on_ready():
 
     # global main_canals_json
     for guild_id in os.listdir(path=data_path):
-        guild_path = data_path + f'\\{guild_id}'
-        with open(guild_path + '\\main_canals.json') as json_file:
+        guild_path = os.sep.join([data_path, str(guild_id)])
+        with open(os.sep.join([guild_path, 'main_canals.json'])) as json_file:
             main_canals_json.append(json.load(json_file))
 
     # global canals_txt
     for guild_id in os.listdir(path=data_path):
-        guild_path = data_path + f'\\{guild_id}'
-        with open(guild_path + '\\canals.txt') as txt_file:
+        guild_path = os.sep.join([data_path, str(guild_id)])
+        with open(os.sep.join([guild_path, 'canals.txt'])) as txt_file:
             for line in txt_file.readlines():
                 canals_txt.append(line.replace('\n',''))
 
 
     # Удаляет прошлые сообщения для управления и создаёт новые!
     for guild_id in os.listdir(path=data_path):
-        guild_path = data_path + f'\\{guild_id}'
-        with open(guild_path + '\\main_canals.json') as json_file:
+        guild_path = os.sep.join([data_path, str(guild_id)])
+        with open(os.sep.join([guild_path, 'main_canals.json'])) as json_file:
             main_canals = json.load(json_file)
             for data_server in main_canals.items():
                 text_channel_id = data_server[0]
@@ -87,7 +89,7 @@ async def on_ready():
 
     # Удаляет пустые голосовые каналы после запуска бота
     for guild_id in os.listdir(path=data_path):
-        guild_path = data_path + f'\\{guild_id}'
+        guild_path = os.sep.join([data_path, str(guild_id)])
         for canal in canals_txt:
             main_text_canal = canal.split(':')[0]
             created_voice_canal = canal.split(':')[1]
@@ -95,7 +97,7 @@ async def on_ready():
             channel  = bot.get_channel(int(created_voice_canal))
             if channel is None:
                 canals_txt.remove(canal)
-                with open(guild_path + '\\canals.txt', 'w') as f_in:
+                with open(os.sep.join([guild_path, 'canals.txt']), 'w') as f_in:
                     for canal_to in canals_txt:
                         f_in.write(canal_to + '\n')
             members_id = []
@@ -104,13 +106,13 @@ async def on_ready():
             if len(members_id) == 0:
                 await channel.delete()
                 canals_txt.remove(canal)
-                with open(guild_path + '\\canals.txt', 'w') as f_in:
+                with open(os.sep.join([guild_path, 'canals.txt']), 'w') as f_in:
                     for canal_to in canals_txt:
                         f_in.write(canal_to + '\n')
             elif created_voice_canal_admin not in members_id:
                 result = f"{main_text_canal}:{created_voice_canal}:{members_id[0]}"
                 canals_txt[canals_txt.index(canal)] = result
-                with open(guild_path + '\\canals.txt', 'w') as f_in:
+                with open(os.sep.join([guild_path, 'canals.txt']), 'w') as f_in:
                     for canal_to in canals_txt:
                         f_in.write(canal_to + '\n')
 
@@ -143,23 +145,23 @@ async def reg(ctx):
     async def settings_step_final_callback(interaction):
         async def final_settings_button_callback(interaction):
             guild_id = ctx.guild.id
-            guild_path = data_path + f'\\{guild_id}'
+            guild_path = os.sep.join([data_path, str(guild_id)])
             if str(guild_id) not in os.listdir(path=data_path):
                 os.mkdir(path=guild_path)
-                open(guild_path + '\\logs.log', "x").close()
-                open(guild_path + '\\logs_errors.log', "x").close()
-                main_canals = open(guild_path + '\\main_canals.json', "x")
+                open(os.sep.join([guild_path, 'logs.log']), "x").close()
+                open(os.sep.join([guild_path, 'logs_errors.log']), "x").close()
+                main_canals = open(os.sep.join([guild_path, 'main_canals.json']), "x")
                 main_canals.write(json.dumps(main_canal_data))
                 main_canals.close()
-                open(guild_path + '\\canals.txt', "x").close()
-                open(guild_path + '\\locales.txt', "x").close()
+                open(os.sep.join([guild_path, 'canals.txt']), "x").close()
+                open(os.sep.join([guild_path, 'locales.txt']), "x").close()
             else:
-                with open(guild_path + '\\main_canals.json') as file:
+                with open(os.sep.join([guild_path, 'main_canals.json'])) as file:
                     main_canal_json_to_delete = json.load(file)
                     for data_in_mcj in main_canal_json_to_delete:
                         to_delete_channel = bot.get_channel(int(data_in_mcj))
                         await to_delete_channel.purge(limit=10, check=lambda message: message.author.id == bot_id)
-                main_canals = open(guild_path + '\\main_canals.json', "w")
+                main_canals = open(os.sep.join([guild_path, 'main_canals.json']), "w")
                 main_canals.write(json.dumps(main_canal_data))
                 main_canals.close()
 
@@ -427,9 +429,9 @@ async def info(ctx):
         return
 
     guild_id = ctx.guild.id
-    guild_path = data_path + f'\\{guild_id}'
+    guild_path = os.sep.join([data_path, str(guild_id)])
     if str(guild_id) in os.listdir(path=data_path):
-        with open(guild_path + '\\main_canals.json') as json_file:
+        with open(os.sep.join([guild_path, 'main_canals.json'])) as json_file:
             main_canals = json.load(json_file)
         description_string = ""
         for data_server in main_canals.items():
@@ -476,9 +478,9 @@ async def reset(ctx):
 
     async def reset_settings_button_callback(interaction):
         guild_id = interaction.guild.id
-        guild_path = data_path + f'\\{guild_id}'
+        guild_path = os.sep.join([data_path, str(guild_id)])
         if str(guild_id) in os.listdir(path=data_path):
-            with open(guild_path + '\\main_canals.json') as file:
+            with open(os.sep.join([guild_path, 'main_canals.json'])) as file:
                 main_canal_json_to_delete = json.load(file)
             shutil.rmtree(guild_path)
 
@@ -749,7 +751,7 @@ async def on_voice_state_update(member, before, after):
     global canals_txt
     global data_path
     global bot_id
-    guild_path = data_path + f'\\{member.guild.id}'
+    guild_path = os.sep.join([data_path, str(member.guild.id)])
 
     # Проверка на регистрацию гильдии...
     if str(member.guild.id) not in os.listdir(path=data_path):
@@ -774,7 +776,7 @@ async def on_voice_state_update(member, before, after):
                 # Управляющий текстовый:Созданный голосовой:Админ
                 result = f"{text_channel}:{voice_channel.id}:{member.id}"
                 canals_txt.append(result)
-                with open(guild_path + '\\canals.txt', 'a') as f_in:
+                with open(os.sep.join([guild_path, 'canals.txt']), 'a') as f_in:
                     f_in.write(result + '\n')
 
     # before использовать для тех кто покидает канал созданный ботом.
@@ -790,16 +792,16 @@ async def on_voice_state_update(member, before, after):
             if len(before.channel.members) == 0:
                 await bot.get_channel(int(created_voice_canal)).delete()
                 canals_txt.remove(canal)
-                with open(guild_path + '\\canals.txt', 'w') as f_in:
+                with open(os.sep.join([guild_path, 'canals.txt']), 'w') as f_in:
                     for canal_to in canals_txt:
                         f_in.write(canal_to + '\n')
             elif str(member.id) == created_voice_canal_admin:
                 # тут лоигка назначения нового админа
                 result = f"{main_text_canal}:{created_voice_canal}:{before.channel.members[0].id}"
                 canals_txt[canals_txt.index(canal)] = result
-                with open(guild_path + '\\canals.txt', 'w') as f_in:
+                with open(os.sep.join([guild_path, 'canals.txt']), 'w') as f_in:
                     for canal_to in canals_txt:
                         f_in.write(canal_to + '\n')
 
 
-bot.run('MTAzNzQ3NzYzMzQxMzM0OTQwNg.GYfQls.5wj55LV8mcPWTcHyz--Ip8O48ngO9D_iExZAWE')
+bot.run(configuration.token)
