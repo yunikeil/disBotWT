@@ -772,58 +772,60 @@ async def on_voice_state_update(member, before, after):
 
     # after использовать для вновь присоединившихся пользователей в управляющий голосовой.
     # также тут создаются каналы в canals_txt и canals.txt
-    for main_canal in main_canals_json:
-        for data_server in main_canal.items():
-            text_channel = data_server[0]
-            voice_channels = data_server[1]
-            if after.channel is not None and str(after.channel.id) in voice_channels:
-                # print(f"after: {after.channel.id} admin: {member.id}")
-                reference = bot.get_channel(after.channel.id)  # берем какой-нибудь канал за "основу"
-                voice_channel = await member.guild.create_voice_channel(
-                    name=f"{after.channel.name.replace('➕','● ')}",
-                    #position=reference.position,  # создаём канал под "основой"
-                    category=reference.category,  # в категории канала-"основы"
-                    reason="voice_bot",  # (отображается в Audit Log)
-                )
-                # Управляющий текстовый:Созданный голосовой:Админ
-                result = f"{text_channel}:{voice_channel.id}:{member.id}"
-                canals_txt.append(result)
-                with open(os.sep.join([guild_path, 'canals.txt']), 'a') as f_in:
-                    f_in.write(result + '\n')
-                await member.move_to(voice_channel)
-                await asyncio.sleep(10)
-                if voice_channel is not None and len(voice_channel.members) == 0:
-                    await voice_channel.delete()
-                    canals_txt.remove(result)
-                    with open(os.sep.join([guild_path, 'canals.txt']), 'w') as f_in:
-                        for canal_to in canals_txt:
-                            f_in.write(canal_to + '\n')
+    if after.channel is not None:
+        for main_canal in main_canals_json:
+            for data_server in main_canal.items():
+                text_channel = data_server[0]
+                voice_channels = data_server[1]
+                if str(after.channel.id) in voice_channels:
+                    # print(f"after: {after.channel.id} admin: {member.id}")
+                    reference = bot.get_channel(after.channel.id)  # берем какой-нибудь канал за "основу"
+                    voice_channel = await member.guild.create_voice_channel(
+                        name=f"{after.channel.name.replace('➕','● ')}",
+                        #position=reference.position,  # создаём канал под "основой"
+                        category=reference.category,  # в категории канала-"основы"
+                        reason="voice_bot",  # (отображается в Audit Log)
+                    )
+                    # Управляющий текстовый:Созданный голосовой:Админ
+                    result = f"{text_channel}:{voice_channel.id}:{member.id}"
+                    canals_txt.append(result)
+                    with open(os.sep.join([guild_path, 'canals.txt']), 'a') as f_in:
+                        f_in.write(result + '\n')
+                    await member.move_to(voice_channel)
+                    await asyncio.sleep(2)
+                    if bot.get_channel(voice_channel.id) is not None and len(voice_channel.members) == 0:
+                        await voice_channel.delete()
+                        canals_txt.remove(result)
+                        with open(os.sep.join([guild_path, 'canals.txt']), 'w') as f_in:
+                            for canal_to in canals_txt:
+                                f_in.write(canal_to + '\n')
 
 
 
     # before использовать для тех кто покидает канал созданный ботом.
-    for canal in canals_txt:
-        main_text_canal = canal.split(':')[0]
-        created_voice_canal = canal.split(':')[1]
-        created_voice_canal_admin = canal.split(':')[2].replace
-        if before.channel is not None and str(before.channel.id) == created_voice_canal:
-            # Две проверки
-            # первая на то, что канал пустой, удалить канал
-            # вторая на то, что ливнул админ, назначить нового админа
-            # print(f"before: {before.channel.id} admin: {member.id}")
-            if len(before.channel.members) == 0:
-                await bot.get_channel(int(created_voice_canal)).delete()
-                canals_txt.remove(canal)
-                with open(os.sep.join([guild_path, 'canals.txt']), 'w') as f_in:
-                    for canal_to in canals_txt:
-                        f_in.write(canal_to + '\n')
-            elif str(member.id) == created_voice_canal_admin:
-                # тут лоигка назначения нового админа
-                result = f"{main_text_canal}:{created_voice_canal}:{before.channel.members[0].id}"
-                canals_txt[canals_txt.index(canal)] = result
-                with open(os.sep.join([guild_path, 'canals.txt']), 'w') as f_in:
-                    for canal_to in canals_txt:
-                        f_in.write(canal_to + '\n')
+    if before.channel is not None:
+        for canal in canals_txt:
+            main_text_canal = canal.split(':')[0]
+            created_voice_canal = canal.split(':')[1]
+            created_voice_canal_admin = canal.split(':')[2].replace
+            if str(before.channel.id) == created_voice_canal:
+                # Две проверки
+                # первая на то, что канал пустой, удалить канал
+                # вторая на то, что ливнул админ, назначить нового админа
+                # print(f"before: {before.channel.id} admin: {member.id}")
+                if len(before.channel.members) == 0:
+                    await bot.get_channel(int(created_voice_canal)).delete()
+                    canals_txt.remove(canal)
+                    with open(os.sep.join([guild_path, 'canals.txt']), 'w') as f_in:
+                        for canal_to in canals_txt:
+                            f_in.write(canal_to + '\n')
+                elif str(member.id) == created_voice_canal_admin:
+                    # тут лоигка назначения нового админа
+                    result = f"{main_text_canal}:{created_voice_canal}:{before.channel.members[0].id}"
+                    canals_txt[canals_txt.index(canal)] = result
+                    with open(os.sep.join([guild_path, 'canals.txt']), 'w') as f_in:
+                        for canal_to in canals_txt:
+                            f_in.write(canal_to + '\n')
 
 
 bot.run(configuration.token)
