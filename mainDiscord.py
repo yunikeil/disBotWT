@@ -33,7 +33,7 @@ data_path ========>
 Включает в себя путь до папки с настройками
 """
 main_canals_json = []
-canals_txt = []
+canals_txt = {}
 data_path = configuration.data_path
 bot_id = configuration.bot_id
 
@@ -60,11 +60,12 @@ async def on_ready():
 
     # global canals_txt
     for guild_id in os.listdir(path=data_path):
+        canals_txt[int(guild_id)] = []
         guild_path = os.sep.join([data_path, str(guild_id)])
         with open(os.sep.join([guild_path, 'canals.txt'])) as txt_file:
             for line in txt_file.readlines():
-                canals_txt.append(line.replace('\n',''))
-
+                canals_txt[int(guild_id)].append(line.replace('\n', ''))
+                # вроде добавил, нужно отлаживать
 
     # Удаляет прошлые сообщения для управления и создаёт новые!
     for guild_id in os.listdir(path=data_path):
@@ -95,35 +96,45 @@ async def on_ready():
 
     # Удаляет пустые голосовые каналы после запуска бота
     for guild_id in os.listdir(path=data_path):
-        guild_path = os.sep.join([data_path, str(guild_id)])
-        canal_txt_copy = copy.copy(canals_txt)
-        for canal in canals_txt:
-            main_text_canal = canal.split(':')[0]
-            created_voice_canal = canal.split(':')[1]
-            created_voice_canal_admin = canal.split(':')[2].replace('\n', '')
-            channel  = bot.get_channel(int(created_voice_canal))
-            if channel is None:
-                canal_txt_copy.remove(canal)
-                with open(os.sep.join([guild_path, 'canals.txt']), 'w') as f_in:
-                    for canal_to in canal_txt_copy:
-                        f_in.write(canal_to + '\n')
-            else:
-                members_id = []
-                for member in channel.members:
-                    members_id.append(str(member.id))
-                if len(members_id) == 0:
-                    await channel.delete()
+        guild_id = int(guild_id)
+        if canals_txt.get(guild_id) is not None:
+            guild_path = os.sep.join([data_path, str(guild_id)])
+            # Удаляет повторы
+            """uniqlines_file = open(os.sep.join([guild_path, 'canals.txt']), 'r', encoding='utf-8')
+            uniqlines = uniqlines_file.readlines()
+            uniqlines_file.close()
+            gotovo_file = open(os.sep.join([guild_path, 'canals.txt']), 'w', encoding='utf-8')
+            gotovo_file.writelines(set(uniqlines))
+            gotovo_file.close()"""
+
+            canal_txt_copy = copy.copy(canals_txt[int(guild_id)])
+            for canal in canals_txt[int(guild_id)]:
+                main_text_canal = canal.split(':')[0]
+                created_voice_canal = canal.split(':')[1]
+                created_voice_canal_admin = canal.split(':')[2].replace('\n', '')
+                channel  = bot.get_channel(int(created_voice_canal))
+                if channel is None:
                     canal_txt_copy.remove(canal)
                     with open(os.sep.join([guild_path, 'canals.txt']), 'w') as f_in:
                         for canal_to in canal_txt_copy:
                             f_in.write(canal_to + '\n')
-                elif created_voice_canal_admin not in members_id:
-                    result = f"{main_text_canal}:{created_voice_canal}:{members_id[0]}"
-                    canal_txt_copy[canal_txt_copy.index(canal)] = result
-                    with open(os.sep.join([guild_path, 'canals.txt']), 'w') as f_in:
-                        for canal_to in canal_txt_copy:
-                            f_in.write(canal_to + '\n')
-        canals_txt = copy.copy(canal_txt_copy)
+                else:
+                    members_id = []
+                    for member in channel.members:
+                        members_id.append(str(member.id))
+                    if len(members_id) == 0:
+                        await channel.delete()
+                        canal_txt_copy.remove(canal)
+                        with open(os.sep.join([guild_path, 'canals.txt']), 'w') as f_in:
+                            for canal_to in canal_txt_copy:
+                                f_in.write(canal_to + '\n')
+                    elif created_voice_canal_admin not in members_id:
+                        result = f"{main_text_canal}:{created_voice_canal}:{members_id[0]}"
+                        canal_txt_copy[canal_txt_copy.index(canal)] = result
+                        with open(os.sep.join([guild_path, 'canals.txt']), 'w') as f_in:
+                            for canal_to in canal_txt_copy:
+                                f_in.write(canal_to + '\n')
+            canals_txt[int(guild_id)] = copy.copy(canal_txt_copy)
 
     print(main_canals_json)
     print(canals_txt)
@@ -777,37 +788,60 @@ async def on_voice_state_update(member, before, after):
             for data_server in main_canal.items():
                 text_channel = data_server[0]
                 voice_channels = data_server[1]
-                if str(after.channel.id) in voice_channels:
-                    # print(f"after: {after.channel.id} admin: {member.id}")
-                    reference = bot.get_channel(after.channel.id)  # берем какой-нибудь канал за "основу"
-                    voice_channel = await member.guild.create_voice_channel(
-                        name=f"{after.channel.name.replace('➕','● ')}",
-                        #position=reference.position,  # создаём канал под "основой"
-                        category=reference.category,  # в категории канала-"основы"
-                        reason="voice_bot",  # (отображается в Audit Log)
-                    )
-                    # Управляющий текстовый:Созданный голосовой:Админ
-                    result = f"{text_channel}:{voice_channel.id}:{member.id}"
-                    canals_txt.append(result)
-                    with open(os.sep.join([guild_path, 'canals.txt']), 'a') as f_in:
-                        f_in.write(result + '\n')
-                    try:
-                        await member.move_to(voice_channel)
-                    except discord.errors.HTTPException as exc:
-                        print(f"guild: {member.guild.id}\nmember: {member.id}\nerror =>\n{exc}\n{'-'*16}")
-                    await asyncio.sleep(2)
-                    if bot.get_channel(voice_channel.id) is not None and len(voice_channel.members) == 0:
-                        await voice_channel.delete()
-                        canals_txt.remove(result)
-                        with open(os.sep.join([guild_path, 'canals.txt']), 'w') as f_in:
-                            for canal_to in canals_txt:
-                                f_in.write(canal_to + '\n')
+                try:
+                    if str(after.channel.id) in voice_channels:
+                        # print(f"after: {after.channel.id} admin: {member.id}")
+                        reference = bot.get_channel(after.channel.id)  # берем какой-нибудь канал за "основу"
+                        voice_channel = await member.guild.create_voice_channel(
+                            name=f"{after.channel.name.replace('➕','● ')}",
+                            #position=reference.position,  # создаём канал под "основой"
+                            category=reference.category,  # в категории канала-"основы"
+                            reason="voice_bot",  # (отображается в Audit Log)
+                        )
+                        # Управляющий текстовый:Созданный голосовой:Админ
+                        result = f"{text_channel}:{voice_channel.id}:{member.id}"
+                        canals_txt[int(member.guild.id)].append(result)
+                        with open(os.sep.join([guild_path, 'canals.txt']), 'a') as f_in:
+                            f_in.write(result + '\n')
+                        try:
+                            await member.move_to(voice_channel)
+                        except discord.errors.HTTPException as exc:
+                            print(f"try_in: await member.move_to(voice_channel) 806_line\n"
+                                  f"guild: {member.guild.id}\n"
+                                  f"member: {member.id}\n"
+                                  f"voice_channel_id: {voice_channel.id}\n"
+                                  f"error =>\n"
+                                  f"{exc}\n"
+                                  f"{'-'*16}")
+                        await asyncio.sleep(5)
+                        if bot.get_channel(voice_channel.id) is not None and len(voice_channel.members) == 0:
+                            try:
+                                await voice_channel.delete()
+                            except Exception as exc:
+                                print(f"try_in: await voice_channel.delete() 818_line\n"
+                                      f"guild: {member.guild.id}\n"
+                                      f"member: {member.id}\n"
+                                      f"voice_channel_id: {voice_channel.id}\n"
+                                      f"error =>\n"
+                                      f"{exc}\n"
+                                      f"{'-' * 16}")
+                            canals_txt[int(member.guild.id)].remove(result)
+                            with open(os.sep.join([guild_path, 'canals.txt']), 'w') as f_in:
+                                for canal_to in canals_txt[int(member.guild.id)]:
+                                    f_in.write(canal_to + '\n')
+                except AttributeError as exc:
+                    print(f"try_in: if str(after.channel.id) in voice_channels 791_line\n"
+                          f"voice_channels: {voice_channels}\n"
+                          f"after_obj: {after}\n"
+                          f"error =>\n"
+                          f"{exc}\n"
+                          f"{'-'*16}")
 
 
 
     # before использовать для тех кто покидает канал созданный ботом.
     if before.channel is not None:
-        for canal in canals_txt:
+        for canal in canals_txt[int(member.guild.id)]:
             main_text_canal = canal.split(':')[0]
             created_voice_canal = canal.split(':')[1]
             created_voice_canal_admin = canal.split(':')[2].replace
@@ -819,16 +853,17 @@ async def on_voice_state_update(member, before, after):
                 if len(before.channel.members) == 0:
                     await bot.get_channel(int(created_voice_canal)).delete()
                     # Не ставлю copy.copy() т.к физически не может быть больше одного канала.
-                    canals_txt.remove(canal)
+                    # copy.copy() Не нужна, т.к канал может быть только один
+                    canals_txt[int(member.guild.id)].remove(canal)
                     with open(os.sep.join([guild_path, 'canals.txt']), 'w') as f_in:
-                        for canal_to in canals_txt:
+                        for canal_to in canals_txt[int(member.guild.id)]:
                             f_in.write(canal_to + '\n')
                 elif str(member.id) == created_voice_canal_admin:
                     # тут лоигка назначения нового админа
                     result = f"{main_text_canal}:{created_voice_canal}:{before.channel.members[0].id}"
-                    canals_txt[canals_txt.index(canal)] = result
+                    canals_txt[int(member.guild.id)][canals_txt[int(member.guild.id)].index(canal)] = result
                     with open(os.sep.join([guild_path, 'canals.txt']), 'w') as f_in:
-                        for canal_to in canals_txt:
+                        for canal_to in canals_txt[int(member.guild.id)]:
                             f_in.write(canal_to + '\n')
 
 
