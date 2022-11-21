@@ -895,7 +895,6 @@ async def on_voice_state_update(member, before, after):
                 # вторая на то, что ливнул админ, назначить нового админа
                 # print(f"before: {before.channel.id} admin: {member.id}")
                 if len(before.channel.members) == 0:
-                    print("len = 0")
                     await bot.get_channel(int(created_voice_canal)).delete()
                     # Не ставлю copy.copy() т.к физически не может быть больше одного канала.
                     # copy.copy() Не нужна, т.к канал может быть только один
@@ -904,7 +903,6 @@ async def on_voice_state_update(member, before, after):
                         for canal_to in canals_txt[int(member.guild.id)]:
                             f_in.write(canal_to + '\n')
                 elif str(member.id) == str(created_voice_canal_admin) and member not in before.channel.members:
-                    print("new admin:", before.channel.members[0].id)
                     # тут лоигка назначения нового админа
                     result = f"{main_text_canal}:{created_voice_canal}:{before.channel.members[0].id}"
                     canals_txt[int(member.guild.id)][canals_txt[int(member.guild.id)].index(canal)] = result
