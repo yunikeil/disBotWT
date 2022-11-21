@@ -43,7 +43,7 @@ bot_id = configuration.bot_id
 
 ## Добавить создание каналов в после серии ненужных (т.е)
 # идёт серия каналов с названием авиаРБ, такнРБ будут создаваться только после каналов с авиаРБ и так далее
-
+# Также перекинуть изменения на хостинг
 
 @bot.event
 async def on_ready():
@@ -791,7 +791,10 @@ async def on_voice_state_update(member, before, after):
                     canals_txt.append(result)
                     with open(os.sep.join([guild_path, 'canals.txt']), 'a') as f_in:
                         f_in.write(result + '\n')
-                    await member.move_to(voice_channel)
+                    try:
+                        await member.move_to(voice_channel)
+                    except discord.errors.HTTPException as exc:
+                        print(f"guild: {member.guild.id}\nmember: {member.id}\nerror =>\n{exc}\n{'-'*16}")
                     await asyncio.sleep(2)
                     if bot.get_channel(voice_channel.id) is not None and len(voice_channel.members) == 0:
                         await voice_channel.delete()
@@ -815,6 +818,7 @@ async def on_voice_state_update(member, before, after):
                 # print(f"before: {before.channel.id} admin: {member.id}")
                 if len(before.channel.members) == 0:
                     await bot.get_channel(int(created_voice_canal)).delete()
+                    # Не ставлю copy.copy() т.к физически не может быть больше одного канала.
                     canals_txt.remove(canal)
                     with open(os.sep.join([guild_path, 'canals.txt']), 'w') as f_in:
                         for canal_to in canals_txt:
