@@ -87,12 +87,12 @@ async def on_ready():
                                 f"Голосовые каналы:\n"
                                 f"{voice_channels_string}"
                 )
-                embed.set_image(url="http://lluban.by/images/storage/news/000509_818136_big.jpg")
+                embed.set_image(url='https://www.net-maquettes.com/wp-content/uploads/2019/02/SAAB-340-AEW-00004.jpg')
                 embed.set_thumbnail(url='https://memepedia.ru/wp-content/uploads/2018/08/dlydryywsaa1jp8-768x576.jpg')
                 embed.set_footer(text='© WTServer 2022')
 
-                #await text_channel.purge(limit=10, check=lambda message: message.author.id == bot_id)
-                #await text_channel.send(embed=embed, view=VoiceButtons())
+                await text_channel.purge(limit=10, check=lambda message: message.author.id == bot_id)
+                await text_channel.send(embed=embed, view=VoiceButtons())
 
     # Удаляет пустые голосовые каналы после запуска бота
     for guild_id in os.listdir(path=data_path):
@@ -112,7 +112,7 @@ async def on_ready():
                 main_text_canal = canal.split(':')[0]
                 created_voice_canal = canal.split(':')[1]
                 created_voice_canal_admin = canal.split(':')[2].replace('\n', '')
-                channel  = bot.get_channel(int(created_voice_canal))
+                channel = bot.get_channel(int(created_voice_canal))
                 if channel is None:
                     canal_txt_copy.remove(canal)
                     with open(os.sep.join([guild_path, 'canals.txt']), 'w') as f_in:
@@ -123,7 +123,15 @@ async def on_ready():
                     for member in channel.members:
                         members_id.append(str(member.id))
                     if len(members_id) == 0:
-                        await channel.delete()
+                        try:
+                            await channel.delete()
+                        except discord.errors.NotFound as exc:
+                            print(f"try_in: await member.move_to(voice_channel) 126_line\n"
+                                  f"guild_id: {guild_id}\n"
+                                  f"voice_channel_id: {channel.id}\n"
+                                  f"error =>\n"
+                                  f"{exc}\n"
+                                  f"{'-' * 16}")
                         canal_txt_copy.remove(canal)
                         with open(os.sep.join([guild_path, 'canals.txt']), 'w') as f_in:
                             for canal_to in canal_txt_copy:
@@ -151,7 +159,12 @@ async def reg(ctx):
         if not ctx.message.author.guild_permissions.administrator:
             return
     except AttributeError:
-        await ctx.send("Я не работаю с лс, если вас что-либо не устраивает пишите ему: <#286914074422280194>")
+        embed = discord.Embed(
+            title="Я не работаю с личными сообщениями",
+            description=f"Если есть предложения или Вопросы, пишите ему: "
+                        f"[yunikeil](https://discordapp.com/users/286914074422280194/)"
+        )
+        await ctx.send(embed=embed)
         return
     main_canal_data = {}
 
@@ -201,12 +214,12 @@ async def reg(ctx):
                                 f"Голосовые каналы:\n"
                                 f"{voice_channels_string}"
                 )
-                embed.set_image(url="http://lluban.by/images/storage/news/000509_818136_big.jpg")
+                embed.set_image(url='https://www.net-maquettes.com/wp-content/uploads/2019/02/SAAB-340-AEW-00004.jpg')
                 embed.set_thumbnail(url='https://memepedia.ru/wp-content/uploads/2018/08/dlydryywsaa1jp8-768x576.jpg')
                 embed.set_footer(text='© WTServer 2022')
 
-                #voice_control_settings = bot.get_channel(int(text_channel))
-                #await voice_control_settings.send(embed=embed, view=VoiceButtons())
+                voice_control_settings = bot.get_channel(int(text_channel))
+                await voice_control_settings.send(embed=embed, view=VoiceButtons())
 
             embed = discord.Embed(
                 title="Мастер настройки voice_bot",
@@ -445,7 +458,12 @@ async def info(ctx):
         if not ctx.message.author.guild_permissions.administrator:
             return
     except AttributeError:
-        await ctx.send("Я не работаю с лс, если вас что-либо не устраивает пишите ему: <#286914074422280194>")
+        embed = discord.Embed(
+            title="Я не работаю с личными сообщениями",
+            description=f"Если есть предложения или Вопросы, пишите ему: "
+                        f"[yunikeil](https://discordapp.com/users/286914074422280194/)"
+        )
+        await ctx.send(embed=embed)
         return
 
     guild_id = ctx.guild.id
@@ -578,100 +596,97 @@ async def reset(ctx):
     )
 
 
-## Переместить внутрь класса buttons а также протестировать
-class HumanToKickSelect(discord.ui.Select):
-    def __init__(self, user_voice_channel_id):
-        # time_out устананавливается в классе View(discord.ui.View) в функции вызова.
-        self.user_voice_channel_id = user_voice_channel_id
-        self.members_on_create = bot.get_channel(self.user_voice_channel_id).members
-        options = []
-        for member in self.members_on_create:
-            options.append(
-                discord.SelectOption(label=f"{member.name}", value=f"{member}")
-            )
-        super().__init__(placeholder="Люди в канале: ", max_values=1, min_values=1, options=options)
-
-    async def callback(self, interaction: discord.Interaction):
-        if bot.get_channel(self.user_voice_channel_id) is None:
-            await interaction.response.send_message("Канал пустой, или не существует", ephemeral=True)
-            return
-        members_on_callback = bot.get_channel(self.user_voice_channel_id).members
-        human_in_canal = False
-        click_button_human_in_canal = False
-        for member in members_on_callback:
-            if str(interaction.user) == str(member):
-                click_button_human_in_canal = True
-        if click_button_human_in_canal:
-            for member in members_on_callback:
-                if str(self.values[0]) == str(member):
-                    human_in_canal = True
-                    await member.move_to(None)
-                    await interaction.response.send_message("Человек удалён с канала.", ephemeral=True)
-            if not human_in_canal: await interaction.response.send_message(
-                "Данного человека нет в канала.", ephemeral=True)
-        else:
-            await interaction.response.send_message(
-                "Вы находитесь вне канала, которым пытаетесь управлять.", ephemeral=True)
-
-
-## Переместить внутрь класса buttons а также протестировать
-class LimitButtonModal(discord.ui.Modal, title='Лимит людей'):
-    def __init__(self, user_voice_channel_id, timeout=180):
-        super().__init__(timeout=timeout)
-        self.user_voice_channel_id = user_voice_channel_id
-
-    limit = discord.ui.TextInput(
-        label='Лимит',
-        placeholder='Введите лимит людей...',
-        min_length=1,
-        max_length=2,
-        required=False
-    )
-
-    async def on_submit(self, interaction: discord.Interaction):
-        voice_channel = bot.get_channel(self.user_voice_channel_id)
-        await voice_channel.edit(user_limit=self.limit.value)
-        await interaction.response.send_message(
-            content=f"Лимит людей изменён до: {self.limit}",
-            ephemeral=True
-        )
-
-    async def on_error(self, interaction: discord.Interaction, error):
-        # Добавить сюда логгер
-        pass
-
-
-class RenameButtonModal(discord.ui.Modal, title='Переименовать'):
-    def __init__(self, user_voice_channel_id, timeout=180):
-        super().__init__(timeout=timeout)
-        self.user_voice_channel_id = user_voice_channel_id
-
-    name = discord.ui.TextInput(
-        label='Новое имя',
-        placeholder='Введите новое имя...',
-        min_length=5,
-        max_length=50,
-        required=False
-    )
-
-    async def on_submit(self, interaction: discord.Interaction):
-        voice_channel = bot.get_channel(self.user_voice_channel_id)
-        await voice_channel.edit(name=self.name.value)
-        await interaction.response.send_message(
-            content=f"Имя канала изменено на: {self.name.value}",
-            ephemeral=True
-        )
-
-    async def on_error(self, interaction: discord.Interaction, error):
-        # Добавить сюда логгер
-        pass
-
-
 class VoiceButtons(discord.ui.View):
     global main_canals_json
     global canals_txt
     global data_path
     global bot_id
+
+    # Переместить внутрь класса buttons а также протестировать
+    class HumanToKickSelect(discord.ui.Select):
+        def __init__(self, user_voice_channel_id):
+            # time_out устананавливается в классе View(discord.ui.View) в функции вызова.
+            self.user_voice_channel_id = user_voice_channel_id
+            self.members_on_create = bot.get_channel(self.user_voice_channel_id).members
+            options = []
+            for member in self.members_on_create:
+                options.append(
+                    discord.SelectOption(label=f"{member.name}", value=f"{member}")
+                )
+            super().__init__(placeholder="Люди в канале: ", max_values=1, min_values=1, options=options)
+
+        async def callback(self, interaction: discord.Interaction):
+            if bot.get_channel(self.user_voice_channel_id) is None:
+                await interaction.response.send_message("Канал пустой, или не существует", ephemeral=True)
+                return
+            members_on_callback = bot.get_channel(self.user_voice_channel_id).members
+            human_in_canal = False
+            click_button_human_in_canal = False
+            for member in members_on_callback:
+                if str(interaction.user) == str(member):
+                    click_button_human_in_canal = True
+            if click_button_human_in_canal:
+                for member in members_on_callback:
+                    if str(self.values[0]) == str(member):
+                        human_in_canal = True
+                        await member.move_to(None)
+                        await interaction.response.send_message("Человек удалён с канала.", ephemeral=True)
+                if not human_in_canal: await interaction.response.send_message(
+                    "Данного человека нет в канала.", ephemeral=True)
+            else:
+                await interaction.response.send_message(
+                    "Вы находитесь вне канала, которым пытаетесь управлять.", ephemeral=True)
+
+    ## Переместить внутрь класса buttons а также протестировать
+    class LimitButtonModal(discord.ui.Modal, title='Лимит людей'):
+        def __init__(self, user_voice_channel_id, timeout=180):
+            super().__init__(timeout=timeout)
+            self.user_voice_channel_id = user_voice_channel_id
+
+        limit = discord.ui.TextInput(
+            label='Лимит',
+            placeholder='Введите лимит людей...',
+            min_length=1,
+            max_length=2,
+            required=False
+        )
+
+        async def on_submit(self, interaction: discord.Interaction):
+            voice_channel = bot.get_channel(self.user_voice_channel_id)
+            await voice_channel.edit(user_limit=self.limit.value)
+            await interaction.response.send_message(
+                content=f"Лимит людей изменён до: {self.limit}",
+                ephemeral=True
+            )
+
+        async def on_error(self, interaction: discord.Interaction, error):
+            # Добавить сюда логгер
+            pass
+
+    class RenameButtonModal(discord.ui.Modal, title='Переименовать'):
+        def __init__(self, user_voice_channel_id, timeout=180):
+            super().__init__(timeout=timeout)
+            self.user_voice_channel_id = user_voice_channel_id
+
+        name = discord.ui.TextInput(
+            label='Новое имя',
+            placeholder='Введите новое имя...',
+            min_length=5,
+            max_length=50,
+            required=False
+        )
+
+        async def on_submit(self, interaction: discord.Interaction):
+            voice_channel = bot.get_channel(self.user_voice_channel_id)
+            await voice_channel.edit(name=self.name.value)
+            await interaction.response.send_message(
+                content=f"Имя канала изменено на: {self.name.value}",
+                ephemeral=True
+            )
+
+        async def on_error(self, interaction: discord.Interaction, error):
+            # Добавить сюда логгер
+            pass
 
     def __init__(self):
         super().__init__()
@@ -679,18 +694,9 @@ class VoiceButtons(discord.ui.View):
 
     @staticmethod
     async def checkCanal(interaction):
-        ## Сюда добавить проверку является ли КАНАЛ ПОД УПРАВЛЕНИЕ БОТА
-        # Добавить проверку на админа голосового чата.
-        await interaction.response.send_message(
-            content=f"Функционал в процессе производства",
-            ephemeral=True
-        )
-        # Первая проверка на то является ли человек внутри канала который создал сервер
-        # Вторая проверка на то является ли человек админом голосового на котором сидит
-        # Третья проверка на то откуда идёт вызов из текстового который управляет или нет
-        print(interaction.channel.id)             # текстовый в котором нажата кнопка
-        print(interaction.user.voice.channel.id)  # в каком сидит пользователь
-        """
+        guild_id = interaction.guild.id
+
+        """# Тут лежит прежняя версия типо проверки
         created_our_servers = [1041389445217275904, 1041389483888746577]
         if interaction.user.voice and interaction.user.voice.channel.id in created_our_servers:
             return True, interaction.user.voice.channel.id
@@ -702,14 +708,45 @@ class VoiceButtons(discord.ui.View):
             )
             return False, None
         """
-        return False, 0
+
+        #print("channel of button id:", interaction.channel.id)  # текстовый в котором нажата кнопка
+        #print("voice people channel id:", interaction.user.voice.channel.id)  # в каком сидит пользователь
+        # Находится в той же папке каналов
+        if interaction is not None:
+            if str(interaction.channel.category) == str(interaction.user.voice.channel.category):
+                # Первая проверка на то является ли человек внутри канала который создал сервер
+                # Вторая проверка на то является ли человек админом голосового на котором сидит
+                if str(f"{interaction.channel.id}:"
+                       f"{interaction.user.voice.channel.id}:"
+                       f"{interaction.user.id}") in canals_txt[int(guild_id)]:
+                    return True, interaction.user.voice.channel.id
+                # Третья проверка на то откуда идёт вызов из текстового который управляет или нет
+                #  частично покрывается нулевой проверкой. (если в группе несколько управляющих, работать будет криво)
+                #elif str(interaction.channel.id) in str(main_canals_json):
+                #    print("Всё ок")
+                #    pass
+                else:
+                    await interaction.response.send_message(
+                        content=f"Вероятно, бот не управляет каналом, в котором"
+                                f" вы находитесь. Или вы не являетесь администратором данного канала.",
+                        ephemeral=True
+                    )
+                    return False, None
+            else:
+                # Находится в другой папке каналов
+                await interaction.response.send_message(
+                    content=f"Вы находитесь вне действующей группы каналов,"
+                            f" или зоны действия бота.",
+                    ephemeral=True
+                )
+                return False, None
 
     @discord.ui.button(label="Лимит людей", style=discord.ButtonStyle.primary, row=1)
     async def limit_button(self, interaction: discord.Interaction, button: discord.ui.Button):
         isBool, user_voice_channel_id = await self.checkCanal(interaction)
         if isBool:
             await interaction.response.send_modal(
-                LimitButtonModal(user_voice_channel_id=user_voice_channel_id)
+                VoiceButtons.LimitButtonModal(user_voice_channel_id=user_voice_channel_id)
             )
 
     @discord.ui.button(label="Переименовать", style=discord.ButtonStyle.primary, row=1)
@@ -717,7 +754,7 @@ class VoiceButtons(discord.ui.View):
         isBool, user_voice_channel_id = await self.checkCanal(interaction)
         if isBool:
             await interaction.response.send_modal(
-                RenameButtonModal(user_voice_channel_id=user_voice_channel_id)
+                VoiceButtons.RenameButtonModal(user_voice_channel_id=user_voice_channel_id)
             )
 
     @discord.ui.button(label="Закрыть канал", style=discord.ButtonStyle.primary, row=1)
@@ -750,7 +787,7 @@ class VoiceButtons(discord.ui.View):
             class View(discord.ui.View):
                 def __init__(self, *, timeout=180):
                     super().__init__(timeout=timeout)
-                    self.add_item(HumanToKickSelect(user_voice_channel_id=user_voice_channel_id))
+                    self.add_item(VoiceButtons.HumanToKickSelect(user_voice_channel_id=user_voice_channel_id))
 
                 async def on_timeout(self):
                     self.clear_items()
@@ -767,6 +804,7 @@ class VoiceButtons(discord.ui.View):
             content="test button!",
             ephemeral=True
         )
+
 
 ## Стоит добавить задержку между действиями хотя бы в 2 секунды.
 @bot.event
@@ -793,8 +831,8 @@ async def on_voice_state_update(member, before, after):
                         # print(f"after: {after.channel.id} admin: {member.id}")
                         reference = bot.get_channel(after.channel.id)  # берем какой-нибудь канал за "основу"
                         voice_channel = await member.guild.create_voice_channel(
-                            name=f"{after.channel.name.replace('➕','● ')}",
-                            #position=reference.position,  # создаём канал под "основой"
+                            name=f"{after.channel.name.replace('➕', '● ')}",
+                            # position=reference.position,  # создаём канал под "основой"
                             category=reference.category,  # в категории канала-"основы"
                             reason="voice_bot",  # (отображается в Audit Log)
                         )
@@ -812,7 +850,7 @@ async def on_voice_state_update(member, before, after):
                                   f"voice_channel_id: {voice_channel.id}\n"
                                   f"error =>\n"
                                   f"{exc}\n"
-                                  f"{'-'*16}")
+                                  f"{'-' * 16}")
                         await asyncio.sleep(5)
                         if bot.get_channel(voice_channel.id) is not None and len(voice_channel.members) == 0:
                             try:
@@ -835,9 +873,7 @@ async def on_voice_state_update(member, before, after):
                           f"after_obj: {after}\n"
                           f"error =>\n"
                           f"{exc}\n"
-                          f"{'-'*16}")
-
-
+                          f"{'-' * 16}")
 
     # before использовать для тех кто покидает канал созданный ботом.
     if before.channel is not None:
