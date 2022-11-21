@@ -713,27 +713,35 @@ class VoiceButtons(discord.ui.View):
         #print("voice people channel id:", interaction.user.voice.channel.id)  # в каком сидит пользователь
         # Находится в той же папке каналов
         if interaction is not None:
-            if str(interaction.channel.category) == str(interaction.user.voice.channel.category):
-                # Первая проверка на то является ли человек внутри канала который создал сервер
-                # Вторая проверка на то является ли человек админом голосового на котором сидит
-                if str(f"{interaction.channel.id}:"
-                       f"{interaction.user.voice.channel.id}:"
-                       f"{interaction.user.id}") in canals_txt[int(guild_id)]:
-                    return True, interaction.user.voice.channel.id
-                # Третья проверка на то откуда идёт вызов из текстового который управляет или нет
-                #  частично покрывается нулевой проверкой. (если в группе несколько управляющих, работать будет криво)
-                #elif str(interaction.channel.id) in str(main_canals_json):
-                #    print("Всё ок")
-                #    pass
+            try:
+                if str(interaction.channel.category) == str(interaction.user.voice.channel.category):
+                    # Первая проверка на то является ли человек внутри канала который создал сервер
+                    # Вторая проверка на то является ли человек админом голосового на котором сидит
+                    if str(f"{interaction.channel.id}:"
+                           f"{interaction.user.voice.channel.id}:"
+                           f"{interaction.user.id}") in canals_txt[int(guild_id)]:
+                        return True, interaction.user.voice.channel.id
+                    # Третья проверка на то откуда идёт вызов из текстового который управляет или нет
+                    #  частично покрывается нулевой проверкой. (если в группе несколько управляющих, работать будет криво)
+                    #elif str(interaction.channel.id) in str(main_canals_json):
+                    #    print("Всё ок")
+                    #    pass
+                    else:
+                        await interaction.response.send_message(
+                            content=f"Вероятно, бот не управляет каналом, в котором"
+                                    f" вы находитесь. Или вы не являетесь администратором данного канала.",
+                            ephemeral=True
+                        )
+                        return False, None
                 else:
+                    # Находится в другой папке каналов
                     await interaction.response.send_message(
-                        content=f"Вероятно, бот не управляет каналом, в котором"
-                                f" вы находитесь. Или вы не являетесь администратором данного канала.",
+                        content=f"Вы находитесь вне действующей группы каналов,"
+                                f" или зоны действия бота.",
                         ephemeral=True
                     )
                     return False, None
-            else:
-                # Находится в другой папке каналов
+            except AttributeError:
                 await interaction.response.send_message(
                     content=f"Вы находитесь вне действующей группы каналов,"
                             f" или зоны действия бота.",
@@ -749,13 +757,13 @@ class VoiceButtons(discord.ui.View):
                 VoiceButtons.LimitButtonModal(user_voice_channel_id=user_voice_channel_id)
             )
 
-    @discord.ui.button(label="Переименовать", style=discord.ButtonStyle.primary, row=1)
+    """@discord.ui.button(label="Переименовать", style=discord.ButtonStyle.primary, row=1)
     async def rename_button(self, interaction: discord.Interaction, button: discord.ui.Button):
         isBool, user_voice_channel_id = await self.checkCanal(interaction)
         if isBool:
             await interaction.response.send_modal(
                 VoiceButtons.RenameButtonModal(user_voice_channel_id=user_voice_channel_id)
-            )
+            )"""
 
     @discord.ui.button(label="Закрыть канал", style=discord.ButtonStyle.primary, row=1)
     async def close_button(self, interaction: discord.Interaction, button: discord.ui.Button):
@@ -798,12 +806,12 @@ class VoiceButtons(discord.ui.View):
                 view=View()
             )
 
-    @discord.ui.button(label="test", style=discord.ButtonStyle.danger, row=2)
+    """@discord.ui.button(label="test", style=discord.ButtonStyle.danger, row=2)
     async def test_button(self, interaction: discord.Interaction, button: discord.ui.Button):
         await interaction.response.send_message(
             content="test button!",
             ephemeral=True
-        )
+        )"""
 
 
 ## Стоит добавить задержку между действиями хотя бы в 2 секунды.
@@ -880,13 +888,14 @@ async def on_voice_state_update(member, before, after):
         for canal in canals_txt[int(member.guild.id)]:
             main_text_canal = canal.split(':')[0]
             created_voice_canal = canal.split(':')[1]
-            created_voice_canal_admin = canal.split(':')[2].replace
+            created_voice_canal_admin = canal.split(':')[2].replace("\n", '')
             if str(before.channel.id) == created_voice_canal:
                 # Две проверки
                 # первая на то, что канал пустой, удалить канал
                 # вторая на то, что ливнул админ, назначить нового админа
                 # print(f"before: {before.channel.id} admin: {member.id}")
                 if len(before.channel.members) == 0:
+                    print("len = 0")
                     await bot.get_channel(int(created_voice_canal)).delete()
                     # Не ставлю copy.copy() т.к физически не может быть больше одного канала.
                     # copy.copy() Не нужна, т.к канал может быть только один
@@ -894,7 +903,8 @@ async def on_voice_state_update(member, before, after):
                     with open(os.sep.join([guild_path, 'canals.txt']), 'w') as f_in:
                         for canal_to in canals_txt[int(member.guild.id)]:
                             f_in.write(canal_to + '\n')
-                elif str(member.id) == created_voice_canal_admin:
+                elif str(member.id) == str(created_voice_canal_admin) and member not in before.channel.members:
+                    print("new admin:", before.channel.members[0].id)
                     # тут лоигка назначения нового админа
                     result = f"{main_text_canal}:{created_voice_canal}:{before.channel.members[0].id}"
                     canals_txt[int(member.guild.id)][canals_txt[int(member.guild.id)].index(canal)] = result
