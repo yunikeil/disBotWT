@@ -6,10 +6,17 @@ import shutil
 import json
 import copy
 import asyncio
+import logging.handlers
 
 import configuration
 
 bot = commands.Bot(command_prefix='>', intents=discord.Intents.all())
+
+## Доабвить общий логгер на дебаг а также логгер на инфо и ошибки
+
+# Для тех кто любит спамит можно пробовать эту функцию https://qna.habr.com/q/925267
+# Проверку для того подходит или нет канал можно завернуть в предикат https://ru.stackoverflow.com/questions/1369564
+# Раз в час: https://ru.stackoverflow.com/questions/1173308/
 
 # global variables
 """
@@ -45,6 +52,7 @@ bot_id = configuration.bot_id
 # идёт серия каналов с названием авиаРБ, такнРБ будут создаваться только после каналов с авиаРБ и так далее
 # Также перекинуть изменения на хостинг
 
+
 @bot.event
 async def on_ready():
     global main_canals_json
@@ -54,12 +62,14 @@ async def on_ready():
 
     # global main_canals_json
     for guild_id in os.listdir(path=data_path):
+        guild_id = int(guild_id)
         guild_path = os.sep.join([data_path, str(guild_id)])
         with open(os.sep.join([guild_path, 'main_canals.json'])) as json_file:
             main_canals_json.append(json.load(json_file))
 
     # global canals_txt
     for guild_id in os.listdir(path=data_path):
+        guild_id = int(guild_id)
         canals_txt[int(guild_id)] = []
         guild_path = os.sep.join([data_path, str(guild_id)])
         with open(os.sep.join([guild_path, 'canals.txt'])) as txt_file:
@@ -197,6 +207,9 @@ async def reg(ctx):
                 main_canals = open(os.sep.join([guild_path, 'main_canals.json']), "w")
                 main_canals.write(json.dumps(main_canal_data))
                 main_canals.close()
+
+            canals_txt[int(guild_id)] = []
+            print(canals_txt)
 
             # Функция отправки сообщений начальных
             main_canals_json.append(main_canal_data)
@@ -637,7 +650,7 @@ class VoiceButtons(discord.ui.View):
                 await interaction.response.send_message(
                     "Вы находитесь вне канала, которым пытаетесь управлять.", ephemeral=True)
 
-    ## Переместить внутрь класса buttons а также протестировать
+
     class LimitButtonModal(discord.ui.Modal, title='Лимит людей'):
         def __init__(self, user_voice_channel_id, timeout=180):
             super().__init__(timeout=timeout)
@@ -911,4 +924,4 @@ async def on_voice_state_update(member, before, after):
                             f_in.write(canal_to + '\n')
 
 
-bot.run(configuration.token)
+bot.run(configuration.token, log_handler=None)

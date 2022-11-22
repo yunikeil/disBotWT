@@ -1,2 +1,37 @@
-# Раз в час: https://ru.stackoverflow.com/questions/1173308/
+import discord
+from discord.ext import commands
 
+import configuration
+import logging.handlers
+
+
+bot = commands.Bot(command_prefix='>', intents=discord.Intents.all())
+# handler = logging.FileHandler(filename='discord.log', encoding='utf-8', mode='w')
+
+logger = logging.getLogger('discord')
+logger.setLevel(logging.DEBUG)
+logging.getLogger('discord.http').setLevel(logging.DEBUG)
+
+handler = logging.handlers.RotatingFileHandler(
+    filename='discord.log',
+    encoding='utf-8',
+    maxBytes=32 * 1024 * 1024,  # 32 MiB
+    backupCount=5,  # Rotate through 5 files
+)
+dt_fmt = '%Y-%m-%d %H:%M:%S'
+formatter = logging.Formatter('[{asctime}] [{levelname:<8}] {name}: {message}', dt_fmt, style='{')
+handler.setFormatter(formatter)
+logger.addHandler(handler)
+
+
+@bot.event
+async def on_ready():
+    print(f'We have logged in as {bot.user}')
+
+
+@bot.command()
+async def info(ctx):
+    await ctx.send("info command!")
+
+
+bot.run(configuration.token, log_handler=None)
