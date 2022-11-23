@@ -187,6 +187,8 @@ async def reg(ctx):
 
     async def settings_step_final_callback(interaction):
         async def final_settings_button_callback(interaction):
+            global canals_txt
+
             guild_id = ctx.guild.id
             guild_path = os.sep.join([data_path, str(guild_id)])
             if str(guild_id) not in os.listdir(path=data_path):
@@ -209,7 +211,7 @@ async def reg(ctx):
                 main_canals.close()
 
             canals_txt[int(guild_id)] = []
-            canals_txt[int(guild_id)].append("")
+
 
             # Функция отправки сообщений начальных
             main_canals_json.append(main_canal_data)
