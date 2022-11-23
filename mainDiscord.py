@@ -51,6 +51,8 @@ bot_id = configuration.bot_id
 ## Добавить создание каналов в после серии ненужных (т.е)
 # идёт серия каналов с названием авиаРБ, такнРБ будут создаваться только после каналов с авиаРБ и так далее
 # Также перекинуть изменения на хостинг
+#logging.basicConfig(filename="FilesLog.log",
+#                    format="%(asctime)s - %(levelname)s - %(funcName)s: %(lineno)d - %(message)s")
 
 
 @bot.event
@@ -72,6 +74,13 @@ async def on_ready():
         guild_id = int(guild_id)
         canals_txt[int(guild_id)] = []
         guild_path = os.sep.join([data_path, str(guild_id)])
+        # Удаляет повторы
+        uniqlines_file = open(os.sep.join([guild_path, 'canals.txt']), 'r', encoding='utf-8')
+        uniqlines = uniqlines_file.readlines()
+        uniqlines_file.close()
+        gotovo_file = open(os.sep.join([guild_path, 'canals.txt']), 'w', encoding='utf-8')
+        gotovo_file.writelines(set(uniqlines))
+        gotovo_file.close()
         with open(os.sep.join([guild_path, 'canals.txt']), 'r') as txt_file:
             for line in txt_file.readlines():
                 canals_txt[int(guild_id)].append(line.replace('\n', ''))
@@ -109,14 +118,8 @@ async def on_ready():
         guild_id = int(guild_id)
         if canals_txt.get(guild_id) is not None:
             guild_path = os.sep.join([data_path, str(guild_id)])
-            # Удаляет повторы
-            """uniqlines_file = open(os.sep.join([guild_path, 'canals.txt']), 'r', encoding='utf-8')
-            uniqlines = uniqlines_file.readlines()
-            uniqlines_file.close()
-            gotovo_file = open(os.sep.join([guild_path, 'canals.txt']), 'w', encoding='utf-8')
-            gotovo_file.writelines(set(uniqlines))
-            gotovo_file.close()"""
 
+            print(f"canals_txt do: {canals_txt}")
             canal_txt_copy = copy.copy(canals_txt[int(guild_id)])
             for canal in canals_txt[int(guild_id)]:
                 main_text_canal = canal.split(':')[0]
@@ -125,6 +128,7 @@ async def on_ready():
                 channel = bot.get_channel(int(created_voice_canal))
                 if channel is None:
                     canal_txt_copy.remove(canal)
+                    #logging.info(f"canals_txt_befor = \n{canals_txt}")
                     with open(os.sep.join([guild_path, 'canals.txt']), 'w') as f_in:
                         for canal_to in canal_txt_copy:
                             f_in.write(canal_to + '\n')
@@ -153,6 +157,7 @@ async def on_ready():
                             for canal_to in canal_txt_copy:
                                 f_in.write(canal_to + '\n')
             canals_txt[int(guild_id)] = copy.copy(canal_txt_copy)
+            print(f"canals_txt posle: {canals_txt}")
 
     print(main_canals_json)
     print(canals_txt)
@@ -209,7 +214,7 @@ async def reg(ctx):
                 main_canals.close()
 
             canals_txt[int(guild_id)] = []
-            print(canals_txt)
+            canals_txt[int(guild_id)].append(None)
 
             # Функция отправки сообщений начальных
             main_canals_json.append(main_canal_data)
@@ -884,6 +889,7 @@ async def on_voice_state_update(member, before, after):
                                       f"error =>\n"
                                       f"{exc}\n"
                                       f"{'-' * 16}")
+                            print(f"canals_txt do: {canals_txt}")
                             canals_txt[int(member.guild.id)].remove(result)
                             with open(os.sep.join([guild_path, 'canals.txt']), 'w') as f_in:
                                 for canal_to in canals_txt[int(member.guild.id)]:
@@ -922,6 +928,12 @@ async def on_voice_state_update(member, before, after):
                     with open(os.sep.join([guild_path, 'canals.txt']), 'w') as f_in:
                         for canal_to in canals_txt[int(member.guild.id)]:
                             f_in.write(canal_to + '\n')
+
+
+
+@bot.command()
+async def varn(ctx):
+    await ctx.send(f"canals_txt = {canals_txt}")
 
 
 bot.run(configuration.token)
