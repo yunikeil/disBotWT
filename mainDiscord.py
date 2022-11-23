@@ -64,7 +64,7 @@ async def on_ready():
     for guild_id in os.listdir(path=data_path):
         guild_id = int(guild_id)
         guild_path = os.sep.join([data_path, str(guild_id)])
-        with open(os.sep.join([guild_path, 'main_canals.json'])) as json_file:
+        with open(os.sep.join([guild_path, 'main_canals.json']), 'r') as json_file:
             main_canals_json.append(json.load(json_file))
 
     # global canals_txt
@@ -72,7 +72,7 @@ async def on_ready():
         guild_id = int(guild_id)
         canals_txt[int(guild_id)] = []
         guild_path = os.sep.join([data_path, str(guild_id)])
-        with open(os.sep.join([guild_path, 'canals.txt'])) as txt_file:
+        with open(os.sep.join([guild_path, 'canals.txt']), 'r') as txt_file:
             for line in txt_file.readlines():
                 canals_txt[int(guild_id)].append(line.replace('\n', ''))
                 # вроде добавил, нужно отлаживать
@@ -80,7 +80,7 @@ async def on_ready():
     # Удаляет прошлые сообщения для управления и создаёт новые!
     for guild_id in os.listdir(path=data_path):
         guild_path = os.sep.join([data_path, str(guild_id)])
-        with open(os.sep.join([guild_path, 'main_canals.json'])) as json_file:
+        with open(os.sep.join([guild_path, 'main_canals.json']), 'r') as json_file:
             main_canals = json.load(json_file)
             for data_server in main_canals.items():
                 text_channel_id = data_server[0]
@@ -101,8 +101,8 @@ async def on_ready():
                 embed.set_thumbnail(url='https://memepedia.ru/wp-content/uploads/2018/08/dlydryywsaa1jp8-768x576.jpg')
                 embed.set_footer(text='© WTServer 2022')
 
-                await text_channel.purge(limit=10, check=lambda message: message.author.id == bot_id)
-                await text_channel.send(embed=embed, view=VoiceButtons())
+                #await text_channel.purge(limit=10, check=lambda message: message.author.id == bot_id)
+                #await text_channel.send(embed=embed, view=VoiceButtons())
 
     # Удаляет пустые голосовые каналы после запуска бота
     for guild_id in os.listdir(path=data_path):
@@ -232,7 +232,7 @@ async def reg(ctx):
                 embed.set_footer(text='© WTServer 2022')
 
                 voice_control_settings = bot.get_channel(int(text_channel))
-                await voice_control_settings.send(embed=embed, view=VoiceButtons())
+                #await voice_control_settings.send(embed=embed, view=VoiceButtons())
 
             embed = discord.Embed(
                 title="Мастер настройки voice_bot",
@@ -924,4 +924,4 @@ async def on_voice_state_update(member, before, after):
                             f_in.write(canal_to + '\n')
 
 
-bot.run(configuration.token, log_handler=None)
+bot.run(configuration.token)
