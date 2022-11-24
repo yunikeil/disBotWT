@@ -953,12 +953,13 @@ async def on_voice_state_update(member, before, after):
                                       f"{exc}\n"
                                       f"{'-' * 16}")
                 except AttributeError as exc:
-                    print(f"try_in: if str(after.channel.id) in voice_channels 791_line\n"
+                    pass
+                    """print(f"try_in: if str(after.channel.id) in voice_channels 791_line\n"
                           f"voice_channels: {voice_channels}\n"
                           f"after_obj: {after}\n"
                           f"error =>\n"
                           f"{exc}\n"
-                          f"{'-' * 16}")
+                          f"{'-' * 16}")"""
 
     # before использовать для тех кто покидает канал созданный ботом.
     if before.channel is not None and canals_txt.get(int(member.guild.id)) is not None:
