@@ -1,0 +1,7 @@
+SequenceProxy(dict_values([
+<CategoryChannel id=1042115298981052487 name='Текстовые каналы' position=0 nsfw=False>,
+<CategoryChannel id=1042115298981052488 name='Голосовые каналы' position=0 nsfw=False>,
+<TextChannel id=1042182473867591710 name='fica1_text' position=1 nsfw=False news=False category_id=1042115298981052488>,
+<TextChannel id=1043361619599704114 name='основной' position=2 nsfw=False news=False category_id=1042115298981052487>,
+<VoiceChannel id=1044215365946834994 name='➕личный канал' rtc_region=None position=2 bitrate=64000 video_quality_mode=<VideoQualityMode.auto: 1> user_limit=0 category_id=1042115298981052488>,
+<VoiceChannel id=1044319754556543127 name='➕личный канал2' rtc_region=None position=3 bitrate=64000 video_quality_mode=<VideoQualityMode.auto: 1> user_limit=0 category_id=1042115298981052488>]))

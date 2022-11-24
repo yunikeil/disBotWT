@@ -13,6 +13,7 @@ import configuration
 bot = commands.Bot(command_prefix='>', intents=discord.Intents.all(), help_command=None)
 
 ## Доабвить общий логгер на дебаг а также логгер на инфо и ошибки
+## И убрать эти дибильный сообщения об ошибка в трай ексепт
 
 # Для тех кто любит спамит можно пробовать эту функцию https://qna.habr.com/q/925267
 # Проверку для того подходит или нет канал можно завернуть в предикат https://ru.stackoverflow.com/questions/1369564
@@ -114,7 +115,7 @@ async def update_messages():
                 await text_channel.purge(limit=10, check=lambda message: message.author.id == bot_id)
                 await text_channel.send(embed=embed, view=VoiceButtons(language=None))
 
-
+## Каналы не удаляются если их нет в файле
 async def update_voice_canals():
     global main_canals_json
     global canals_txt
@@ -242,7 +243,7 @@ async def reg(ctx):
                     voice_channels_string = voice_channels_string + f"><#{voice_channel}>\n"
                 embed = discord.Embed(
                     title="War Thunder Voice",
-                    colour=discord.Colour.blurple(),
+                    colour=discord.Colour.red(),
                     description=f"Chat for management:\n"
                                 f"<#{text_channel}>\n"
                                 f"Voice channels:\n"
