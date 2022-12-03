@@ -952,7 +952,12 @@ async def on_voice_state_update(member, before, after):
                 # print(f"before: {before.channel.id} admin: {member.id}")
                 try:
                     if len(before.channel.members) == 0:
-                        await bot.get_channel(int(created_voice_canal)).delete()
+                        try:
+                            ch = bot.get_channel(int(created_voice_canal))
+                            await ch.delete()
+                        except discord.errors.NotFound as e:
+                            print(created_voice_canal)
+                            print(e)
                         # Не ставлю copy.copy() т.к физически не может быть больше одного канала.
                         # copy.copy() Не нужна, т.к канал может быть только один
                         canals_txt[int(member.guild.id)].remove(canal)
@@ -1008,7 +1013,6 @@ async def on_command_error(ctx, error):
         return
     raise error
 
-## Добавить ещё один файл, который сохраняет все каналы  для проверки создавались ли когда либо ботом
-
+## Добавить функцию, которая выводит созданные и удалённые в логи в дискорде, проверять гильдию на 69..
 
 bot.run(configuration.token)
