@@ -6,6 +6,7 @@ import shutil
 import json
 import copy
 import asyncio
+import datetime
 import logging.handlers
 
 import configuration
@@ -903,7 +904,6 @@ async def on_voice_state_update(member, before, after):
                 voice_channels = data_server[1]
                 try:
                     if str(after.channel.id) in voice_channels:
-                        # print(f"after: {after.channel.id} admin: {member.id}")
                         reference = bot.get_channel(after.channel.id)  # берем какой-нибудь канал за "основу"
                         voice_channel = await member.guild.create_voice_channel(
                             name=f"{after.channel.name.replace('➕', '● ')}",
@@ -911,55 +911,33 @@ async def on_voice_state_update(member, before, after):
                             category=reference.category,  # в категории канала-"основы"
                             reason="voice_bot",  # (отображается в Audit Log)
                         )
+                        back_res = f"{voice_channel.id}:{datetime.datetime.now().hour}-{datetime.datetime.now().minute}"
                         # Управляющий текстовый:Созданный голосовой:Админ
                         result = f"{text_channel}:{voice_channel.id}:{member.id}"
                         canals_txt[int(member.guild.id)].append(result)
+                        with open('backCanals.txt', 'a') as f_in:
+                            f_in.write(back_res + '\n')
                         with open(os.sep.join([guild_path, 'canals.txt']), 'a') as f_in:
                             f_in.write(result + '\n')
                         try:
                             await member.move_to(voice_channel)
                         except discord.errors.HTTPException as exc:
-                            print(f"try_in: await member.move_to(voice_channel) 806_line\n"
-                                  f"guild: {member.guild.id}\n"
-                                  f"member: {member.id}\n"
-                                  f"voice_channel_id: {voice_channel.id}\n"
-                                  f"error =>\n"
-                                  f"{exc}\n"
-                                  f"{'-' * 16}")
+                            pass
                         await asyncio.sleep(5)
                         if bot.get_channel(voice_channel.id) is not None and len(voice_channel.members) == 0:
                             try:
                                 await voice_channel.delete()
                             except Exception as exc:
-                                print(f"try_in: await voice_channel.delete() 818_line\n"
-                                      f"guild: {member.guild.id}\n"
-                                      f"member: {member.id}\n"
-                                      f"voice_channel_id: {voice_channel.id}\n"
-                                      f"error =>\n"
-                                      f"{exc}\n"
-                                      f"{'-' * 16}")
+                                pass
                             try:
                                 canals_txt[int(member.guild.id)].remove(result)
                                 with open(os.sep.join([guild_path, 'canals.txt']), 'w') as f_in:
                                     for canal_to in canals_txt[int(member.guild.id)]:
                                         f_in.write(canal_to + '\n')
                             except ValueError as exc:
-                                print(f"try_in: canals_txt[int(member.guild.id)].remove(result) 893_line\n"
-                                      f"guild: {member.guild.id}\n"
-                                      f"member: {member.id}\n"
-                                      f"voice_channel_id: {voice_channel.id}\n"
-                                      f"canals_txt: {canals_txt}\n"
-                                      f"error =>\n"
-                                      f"{exc}\n"
-                                      f"{'-' * 16}")
+                                pass
                 except AttributeError as exc:
                     pass
-                    """print(f"try_in: if str(after.channel.id) in voice_channels 791_line\n"
-                          f"voice_channels: {voice_channels}\n"
-                          f"after_obj: {after}\n"
-                          f"error =>\n"
-                          f"{exc}\n"
-                          f"{'-' * 16}")"""
 
     # before использовать для тех кто покидает канал созданный ботом.
     if before.channel is not None and canals_txt.get(int(member.guild.id)) is not None:
@@ -1029,6 +1007,8 @@ async def on_command_error(ctx, error):
     if isinstance(error, discord.ext.commands.CommandNotFound):
         return
     raise error
+
+## Добавить ещё один файл, который сохраняет все каналы  для проверки создавались ли когда либо ботом
 
 
 bot.run(configuration.token)
