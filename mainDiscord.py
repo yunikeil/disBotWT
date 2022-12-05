@@ -13,6 +13,8 @@ import configuration
 
 bot = commands.Bot(command_prefix='>', intents=discord.Intents.all(), help_command=None)
 
+## Переписать с нуля на sqlite и организовать нормальное взаимодействие с сервером
+## Добавить сохранение id сообщений бота в БД
 ## Доабвить общий логгер на дебаг а также логгер на инфо и ошибки
 ## И убрать эти дибильный сообщения об ошибка в трай ексепт
 
@@ -579,7 +581,8 @@ async def reset(ctx):
                         """ Посмотреть возможность удаления только сообщения с командами message.id in messages
                         Файл messages будет храниться в дата и содержать идшники сообщения с командами
                         По факту же можно просто при каждом обновлении управляющего сообщения отсылать всю инфу заново
-                        Или написать инфу от лица админов"""
+                        Или написать инфу от лица админов..
+                        Также можно сохранять идшники сообщенией в базу, и редачить уже их"""
                         await text_reset_channel.purge(limit=10, check=lambda message: message.author.id == bot_id)
                         deleted_channels_string = deleted_channels_string + f"<#{data_in_mcj}>\n"
                     main_canals_json_copy.remove(main_canal_json_to_delete)
