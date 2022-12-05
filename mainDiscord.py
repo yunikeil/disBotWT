@@ -1019,14 +1019,17 @@ async def on_command_error(ctx, error):
 
 @bot.event
 async def on_member_join(member):
-    await asyncio.sleep(20 * 60)
-    member = member
-    guild = member.guild
-    ru_role_id = configuration.ru_role_id
-    en_role_id = configuration.en_role_id
-    if member.get_role(ru_role_id) is None and member.get_role(en_role_id) is None:
-        await member.add_roles(guild.get_role(ru_role_id))
-        await member.add_roles(guild.get_role(en_role_id))
+    await asyncio.sleep(10 * 60)
+    try:
+        member = member
+        guild = member.guild
+        ru_role_id = configuration.ru_role_id
+        en_role_id = configuration.en_role_id
+        if member.get_role(ru_role_id) is None and member.get_role(en_role_id) is None:
+            await member.add_roles(guild.get_role(ru_role_id))
+            await member.add_roles(guild.get_role(en_role_id))
+    except discord.errors.NotFound as e:
+        pass
 
 
 ## Добавить функцию, которая выводит созданные и удалённые в логи в дискорде, проверять гильдию на 69..
