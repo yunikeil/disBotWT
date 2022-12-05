@@ -16,10 +16,14 @@ async def on_ready():
 
 @bot.event
 async def on_member_join(member):
-    # Можно через sleep, можно через запись в файл и каждые 20 минут чекать новых пользователей
-    #await asyncio.sleep(20*60)
-    # Тут проверка на то есть ли роль спустя 20 минут
-    # Если роли нет, тогда ставим автоматом обе роли
+    await asyncio.sleep(20 * 60)
+    member = member
+    guild = member.guild
+    ru_role_id = configuration.ru_role_id
+    en_role_id = configuration.en_role_id
+    if member.get_role(ru_role_id) is None and member.get_role(en_role_id) is None:
+        await member.add_roles(guild.get_role(ru_role_id))
+        await member.add_roles(guild.get_role(en_role_id))
 
 
     pass
@@ -27,7 +31,8 @@ async def on_member_join(member):
 
 @bot.command()
 async def info(ctx):
-    await ctx.send("info command!")
+    await ctx.setn("info_command!")
+
 
 
 bot.run(configuration.token)
