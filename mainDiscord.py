@@ -111,12 +111,16 @@ async def update_messages():
                 )
                 embed.set_image(url='https://media.discordapp.net/attachments/1039227923980353539/'
                                     '1044481856277585950/maxresdefault_1.jpg?width=960&height=540')
-                #embed.set_thumbnail(url='https://memepedia.ru/wp-content/uploads/2018/08/dlydryywsaa1jp8-768x576.jpg')
+                # embed.set_thumbnail(url='https://memepedia.ru/wp-content/uploads/2018/08/dlydryywsaa1jp8-768x576.jpg')
                 embed.set_footer(text='© WTServer 2022')
 
                 ## >control (locale) => en ru
-                await text_channel.purge(limit=10, check=lambda message: message.author.id == bot_id)
+                try:
+                    await text_channel.purge(limit=10, check=lambda message: message.author.id == bot_id)
+                except:
+                    pass
                 await text_channel.send(embed=embed, view=VoiceButtons(language=None))
+
 
 ## Каналы не удаляются если их нет в файле
 async def update_voice_canals():
@@ -254,12 +258,12 @@ async def reg(ctx):
                 )
                 embed.set_image(url='https://media.discordapp.net/attachments/1039227923980353539/'
                                     '1044481856277585950/maxresdefault_1.jpg?width=960&height=540')
-                #embed.set_thumbnail(url='https://memepedia.ru/wp-content/uploads/2018/08/dlydryywsaa1jp8-768x576.jpg')
+                # embed.set_thumbnail(url='https://memepedia.ru/wp-content/uploads/2018/08/dlydryywsaa1jp8-768x576.jpg')
                 embed.set_footer(text='© WTServer 2022')
 
                 voice_control_settings = bot.get_channel(int(text_channel))
                 await voice_control_settings.send(embed=embed, view=VoiceButtons(language=None))
-                #update_varns()
+                # update_varns()
 
             embed = discord.Embed(
                 title="Мастер настройки voice_bot",
@@ -895,7 +899,7 @@ async def on_voice_state_update(member, before, after):
     guild_path = os.sep.join([data_path, str(member.guild.id)])
 
     # Проверка на регистрацию гильдии...
-    #if str(member.guild.id) in os.listdir(path=data_path):
+    # if str(member.guild.id) in os.listdir(path=data_path):
     #    return
 
     # after использовать для вновь присоединившихся пользователей в управляющий голосовой.
@@ -963,10 +967,13 @@ async def on_voice_state_update(member, before, after):
                             print(e)
                         # Не ставлю copy.copy() т.к физически не может быть больше одного канала.
                         # copy.copy() Не нужна, т.к канал может быть только один
-                        canals_txt[int(member.guild.id)].remove(canal)
-                        with open(os.sep.join([guild_path, 'canals.txt']), 'w') as f_in:
-                            for canal_to in canals_txt[int(member.guild.id)]:
-                                f_in.write(canal_to + '\n')
+                        try:
+                            canals_txt[int(member.guild.id)].remove(canal)
+                            with open(os.sep.join([guild_path, 'canals.txt']), 'w') as f_in:
+                                for canal_to in canals_txt[int(member.guild.id)]:
+                                    f_in.write(canal_to + '\n')
+                        except:
+                            pass
                     elif str(member.id) == str(created_voice_canal_admin) and member not in before.channel.members:
                         # тут лоигка назначения нового админа
                         result = f"{main_text_canal}:{created_voice_canal}:{before.channel.members[0].id}"
