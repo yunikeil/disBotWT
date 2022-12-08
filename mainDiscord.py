@@ -918,6 +918,7 @@ async def on_voice_state_update(member, before, after):
                             category=reference.category,  # в категории канала-"основы"
                             reason="voice_bot",  # (отображается в Audit Log)
                         )
+                        await voice_channel.edit(sync_permissions=True)
                         back_res = f"{voice_channel.id}:{datetime.datetime.now().hour}-{datetime.datetime.now().minute}"
                         # Управляющий текстовый:Созданный голосовой:Админ
                         result = f"{text_channel}:{voice_channel.id}:{member.id}"
