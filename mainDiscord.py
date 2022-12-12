@@ -1040,6 +1040,20 @@ async def on_member_join(member):
         pass
 
 
+@bot.event
+async def on_message(message):
+    if 'https://discord.gg/' in message.content and not message.author.guild_permissions.administrator:
+        roles_allowed = [discord.utils.find(lambda r: r.id == 954393422716879019, message.server.roles),  # vip1
+                         discord.utils.find(lambda r: r.id == 1007965606789783572, message.server.roles), # vip2
+                         discord.utils.find(lambda r: r.id == 827202390682894358, message.server.roles),  # deputy
+                         discord.utils.find(lambda r: r.id == 812667192104583218, message.server.roles)]  # head
+        author_roles = message.author.roles
+        for role_allowed in roles_allowed:
+            if role_allowed in author_roles:
+                return
+        await message.delete()
+
+
 ## Добавить функцию, которая выводит созданные и удалённые в логи в дискорде, проверять гильдию на 69..
 
 bot.run(configuration.token)
