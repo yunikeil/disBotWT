@@ -652,7 +652,6 @@ class VoiceButtons(discord.ui.View):
     global data_path
     global bot_id
 
-    # Переместить внутрь класса buttons а также протестировать
     class HumanToKickSelect(discord.ui.Select):
         def __init__(self, user_voice_channel_id):
             # time_out устананавливается в классе View(discord.ui.View) в функции вызова.
@@ -678,9 +677,20 @@ class VoiceButtons(discord.ui.View):
             if click_button_human_in_canal:
                 for member in members_on_callback:
                     if str(self.values[0]) == str(member):
+                        # Функционал для запрета этому пользователю входить в канал
+                        async def deny_entry_callback(interaction):
+                            ## Установить права доступы на запрет входа человеку (member)
+                            await interaction.response.send_message(f"The ban is set for: <@{member.id}>")
+                            pass
+                        deny_entry_button = discord.ui.Button(
+                            style=discord.ButtonStyle.gray,
+                            label="click me to ban this user from logging in"
+                        )
+                        deny_entry_button.callback = deny_entry_callback
                         human_in_canal = True
                         await member.move_to(None)
                         await interaction.response.send_message("The person has been removed from the channel.",
+                                                                view=discord.ui.View().add_item(item=deny_entry_button),
                                                                 ephemeral=True)
                 if not human_in_canal: await interaction.response.send_message(
                     "This person is not in the channel.", ephemeral=True)
@@ -1044,7 +1054,7 @@ async def on_member_join(member):
 async def on_message(message):
     if 'https://discord.gg/' in message.content and not message.author.guild_permissions.administrator:
         roles_allowed = [discord.utils.find(lambda r: r.id == 954393422716879019, message.guild.roles),  # vip1
-                         discord.utils.find(lambda r: r.id == 1007965606789783572, message.guild.roles), # vip2
+                         discord.utils.find(lambda r: r.id == 1007965606789783572, message.guild.roles),  # vip2
                          discord.utils.find(lambda r: r.id == 827202390682894358, message.guild.roles),  # deputy
                          discord.utils.find(lambda r: r.id == 812667192104583218, message.guild.roles)]  # head
         author_roles = message.author.roles
