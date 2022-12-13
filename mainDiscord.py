@@ -679,9 +679,14 @@ class VoiceButtons(discord.ui.View):
                     if str(self.values[0]) == str(member):
                         # Функционал для запрета этому пользователю входить в канал
                         async def deny_entry_callback(interaction):
-                            ## Установить права доступы на запрет входа человеку (member)
-                            await interaction.response.send_message(f"The ban is set for: <@{member.id}>")
-                            pass
+                            try:
+                                await bot.get_channel(self.user_voice_channel_id).set_permissions(member, connect=False)
+                                await interaction.response.send_message(f"The ban is set for: <@{member.id}>",
+                                                                        ephemeral=True)
+                            except AttributeError as ex:
+                                await interaction.response.send_message(f"You may have chosen a non-existent channel..",
+                                                                        ephemeral=True)
+
                         deny_entry_button = discord.ui.Button(
                             style=discord.ButtonStyle.gray,
                             label="click me to ban this user from logging in"
@@ -733,6 +738,34 @@ class VoiceButtons(discord.ui.View):
                 content=f"The limit of people has been changed to: {self.limit}",
                 ephemeral=True
             )
+
+        async def on_error(self, interaction: discord.Interaction, error):
+            # Добавить сюда логгер
+            pass
+
+    class DenyEntryButtonModal(discord.ui.Modal, title='Deny entry'):
+        def __init__(self, user_voice_channel_id, timeout=180):
+            super().__init__(timeout=timeout)
+            self.user_voice_channel_id = user_voice_channel_id
+
+        deny_user = discord.ui.TextInput(
+            label='Deny entry',
+            placeholder='Enter people id...',
+            min_length=5,
+            max_length=20,
+            required=False
+        )
+
+        async def on_submit(self, interaction: discord.Interaction):
+            voice_channel = bot.get_channel(self.user_voice_channel_id)
+            try:
+                await bot.get_channel(self.user_voice_channel_id)\
+                    .set_permissions(bot.get_user(int(self.deny_user.value)), connect=False)
+                await interaction.response.send_message(f"The ban is set for: <@{self.deny_user.value}>",
+                                                        ephemeral=True)
+            except AttributeError as ex:
+                await interaction.response.send_message(f"You may have chosen a non-existent channel..",
+                                                        ephemeral=True)
 
         async def on_error(self, interaction: discord.Interaction, error):
             # Добавить сюда логгер
@@ -880,6 +913,14 @@ class VoiceButtons(discord.ui.View):
                 content="Select the participant you want to kick: ",
                 ephemeral=True,
                 view=View()
+            )
+
+    @discord.ui.button(label="deny entry", style=discord.ButtonStyle.gray, row=2)
+    async def deny_entry(self, interaction: discord.Interaction, button: discord.ui.Button):
+        isBool, user_voice_channel_id = await self.checkCanal(interaction)
+        if isBool:
+            await interaction.response.send_modal(
+                VoiceButtons.DenyEntryButtonModal(user_voice_channel_id=user_voice_channel_id)
             )
 
     """@discord.ui.button(label="Language", style=discord.ButtonStyle.danger, row=2)
