@@ -769,8 +769,9 @@ class VoiceButtons(discord.ui.View):
                                                         ephemeral=True)
 
         async def on_error(self, interaction: discord.Interaction, error):
-            # Добавить сюда логгер
-            pass
+            await interaction.response.send_message(f"You may have chosen a non-existent channel..",
+                                                    ephemeral=True)
+
 
     """class RenameButtonModal(discord.ui.Modal, title='Rename'):
         def __init__(self, user_voice_channel_id, timeout=180):
