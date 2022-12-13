@@ -5,6 +5,7 @@ import os
 import shutil
 import json
 import copy
+import random
 import asyncio
 import datetime
 import logging.handlers
@@ -28,7 +29,7 @@ main_canals_json ========>
 Включает в себя массив json:
 {id текстового канала: [массив id голосовых каналов, управленются левым текстовым]}
 {"1042058995663392768": ["1042059323746046043", "1042060242231500891"]}
-Редактируется внутри:
+Редактируется внутри:   
 async def reg
 async def reset
 
@@ -119,7 +120,9 @@ async def update_messages():
                     await text_channel.purge(limit=10, check=lambda message: message.author.id == bot_id)
                 except:
                     pass
-                await text_channel.send(embed=embed, view=VoiceButtons(language=None))
+                if text_channel:
+                    await text_channel.send(embed=embed, view=VoiceButtons(language=None))
+                else: pass
 
 
 ## Каналы не удаляются если их нет в файле
@@ -965,8 +968,10 @@ async def on_voice_state_update(member, before, after):
                 try:
                     if str(after.channel.id) in voice_channels:
                         reference = bot.get_channel(after.channel.id)  # берем какой-нибудь канал за "основу"
+                        smyles = ["❄", "🌨", "⛄", "😬", "🧤", "🏒", "⛸", "🧊", "⛷", "🏂", "🎿", "🛷", "🥶",
+                                  "🎄", "🎁", "🎅"]
                         voice_channel = await member.guild.create_voice_channel(
-                            name=f"{after.channel.name.replace('➕', '● ')}",
+                            name=f"{after.channel.name.replace('➕', '● ')} {random.choice(smyles)}",
                             # position=reference.position,  # создаём канал под "основой"
                             category=reference.category,  # в категории канала-"основы"
                             reason="voice_bot",  # (отображается в Audit Log)
@@ -1041,9 +1046,11 @@ async def on_voice_state_update(member, before, after):
 
 @bot.command()
 async def varn(ctx):
+    print("123")
     try:
         if not ctx.message.author.guild_permissions.administrator:
             return
+        await ctx.send(f"canals_txt = {canals_txt}")
     except AttributeError:
         embed = discord.Embed(
             title="Я не работаю с личными сообщениями",
@@ -1052,10 +1059,9 @@ async def varn(ctx):
         )
         await ctx.send(embed=embed)
         return
-    await ctx.send(f"canals_txt = {canals_txt}")
 
 
-@bot.command()
+"""@bot.command()
 async def help(ctx):
     try:
         if not ctx.message.author.guild_permissions.administrator:
@@ -1068,7 +1074,7 @@ async def help(ctx):
         )
         await ctx.send(embed=embed)
         return
-    await ctx.send("None")
+    await ctx.send("None")"""
 
 
 @bot.event
