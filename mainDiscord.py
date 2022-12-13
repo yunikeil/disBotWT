@@ -694,6 +694,7 @@ class VoiceButtons(discord.ui.View):
                         deny_entry_button.callback = deny_entry_callback
                         human_in_canal = True
                         await member.move_to(None)
+                        await member.move_to(None)
                         await interaction.response.send_message("The person has been removed from the channel.",
                                                                 view=discord.ui.View().add_item(item=deny_entry_button),
                                                                 ephemeral=True)
@@ -915,7 +916,7 @@ class VoiceButtons(discord.ui.View):
                 view=View()
             )
 
-    @discord.ui.button(label="deny entry", style=discord.ButtonStyle.gray, row=2)
+    @discord.ui.button(label="Deny entry", style=discord.ButtonStyle.gray, row=2)
     async def deny_entry(self, interaction: discord.Interaction, button: discord.ui.Button):
         isBool, user_voice_channel_id = await self.checkCanal(interaction)
         if isBool:
