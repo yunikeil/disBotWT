@@ -14,7 +14,7 @@ async def on_ready():
 
 @bot.command()
 async def info(ctx):
-    await ctx.send(f"{bot.get_user(659089840104538132).avatar}")
+    await ctx.send(f"{bot.get_user(1037477633413349406).avatar}")
 
 
 
