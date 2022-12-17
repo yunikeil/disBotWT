@@ -13,3 +13,6 @@ os.system('explorer')
 # Unix
 # os.system('cp file1.txt file7.txt')
 
+"""
+pers voice dir 972525524469571677
+"""
