@@ -1,7 +1,6 @@
 import discord
 from discord.ext import commands
 
-
 from typing import Optional
 
 from typing import Literal, Union, NamedTuple
@@ -13,7 +12,6 @@ from discord import app_commands
 import requests
 import configuration
 import urllib.parse
-
 
 import os
 import shutil
@@ -971,8 +969,11 @@ async def on_voice_state_update(member, before, after):
     # Проверка на регистрацию гильдии...
     # if str(member.guild.id) in os.listdir(path=data_path):
     #    return
-    """if after.channel is not None and after.channel.group.id == 972525524469571677:
-            after.channel.edit(sync_permissions=True)"""
+    try:
+        if after.channel is not None and after.channel.category_id == 972525524469571677:
+            after.channel.edit(sync_permissions=True)
+    except:
+        print("test func")
 
     # after использовать для вновь присоединившихся пользователей в управляющий голосовой.
     # также тут создаются каналы в canals_txt и canals.txt
@@ -1121,13 +1122,14 @@ async def on_message(message):
         roles_allowed = [discord.utils.find(lambda r: r.id == 954393422716879019, message.guild.roles),  # vip1
                          discord.utils.find(lambda r: r.id == 1007965606789783572, message.guild.roles),  # vip2
                          discord.utils.find(lambda r: r.id == 827202390682894358, message.guild.roles),  # deputy
-                         discord.utils.find(lambda r: r.id == 812667192104583218, message.guild.roles), # head
-                         discord.utils.find(lambda r: r.id == 1027862764322029679, message.guild.roles)] # events
+                         discord.utils.find(lambda r: r.id == 812667192104583218, message.guild.roles),  # head
+                         discord.utils.find(lambda r: r.id == 1027862764322029679, message.guild.roles)]  # events
         author_roles = message.author.roles
         for role_allowed in roles_allowed:
             if role_allowed in author_roles:
                 return
         await message.delete()
+
 
 # slash commands
 
@@ -1143,7 +1145,6 @@ class MyClient(discord.Client):
         # This copies the global commands over to your guild.
         self.tree.copy_global_to(guild=MY_GUILD)
         await self.tree.sync(guild=MY_GUILD)"""
-
 
 """
 Допустии у меня есть 5 комманд anime_add anime_del anime_for anime_find
