@@ -971,7 +971,7 @@ async def on_voice_state_update(member, before, after):
     #    return
     try:
         if after.channel is not None and after.channel.category_id == 972525524469571677:
-            after.channel.edit(sync_permissions=True)
+            await after.channel.edit(sync_permissions=True)
     except:
         print("test func")
 
