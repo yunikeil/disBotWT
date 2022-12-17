@@ -972,7 +972,7 @@ async def on_voice_state_update(member, before, after):
     # if str(member.guild.id) in os.listdir(path=data_path):
     #    return
     """if after.channel is not None and after.channel.group.id == 972525524469571677:
-        after.channel.edit(sync_permissions=True)"""
+            after.channel.edit(sync_permissions=True)"""
 
     # after использовать для вновь присоединившихся пользователей в управляющий голосовой.
     # также тут создаются каналы в canals_txt и canals.txt
@@ -993,12 +993,12 @@ async def on_voice_state_update(member, before, after):
                             reason="voice_bot",  # (отображается в Audit Log)
                         )
                         await voice_channel.edit(sync_permissions=True)
-                        back_res = f"{voice_channel.id};{datetime.datetime.now().hour}-{datetime.datetime.now().minute}"
+                        back_res = f"{voice_channel.id}:{datetime.datetime.now().hour}-{datetime.datetime.now().minute}"
                         # Управляющий текстовый:Созданный голосовой:Админ
                         result = f"{text_channel}:{voice_channel.id}:{member.id}"
                         canals_txt[int(member.guild.id)].append(result)
                         with open('backCanals.txt', 'a') as f_in:
-                            f_in.write(result+';;'+back_res + '\n')
+                            f_in.write(back_res + '\n')
                         with open(os.sep.join([guild_path, 'canals.txt']), 'a') as f_in:
                             f_in.write(result + '\n')
                         try:
@@ -1121,8 +1121,8 @@ async def on_message(message):
         roles_allowed = [discord.utils.find(lambda r: r.id == 954393422716879019, message.guild.roles),  # vip1
                          discord.utils.find(lambda r: r.id == 1007965606789783572, message.guild.roles),  # vip2
                          discord.utils.find(lambda r: r.id == 827202390682894358, message.guild.roles),  # deputy
-                         discord.utils.find(lambda r: r.id == 812667192104583218, message.guild.roles),  # head
-                         discord.utils.find(lambda r: r.id == 1027862764322029679, message.guild.roles)] # event org.
+                         discord.utils.find(lambda r: r.id == 812667192104583218, message.guild.roles), # head
+                         discord.utils.find(lambda r: r.id == 1027862764322029679, message.guild.roles)] # events
         author_roles = message.author.roles
         for role_allowed in roles_allowed:
             if role_allowed in author_roles:
@@ -1165,7 +1165,7 @@ async def anime(interaction: discord.Interaction, service: Literal['поиск �
             json_get = requests.get("https://api.trace.moe/search?url={}"
                                     .format(urllib.parse.quote_plus(str(url)))
                                     ).json()['result']
-            for element in json_get: 
+            for element in json_get:
                 pass
             anilist = json_get[0]['anilist']
             filename = json_get[0]['filename']
