@@ -7,6 +7,7 @@ class MyClient(discord.Client):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+        self.aman_id = 632552306398724106
         self.role_message_id = 1056154559833186384  # ID of the message that can be reacted to to add/remove a role.
         self.emoji_to_role = {
             discord.PartialEmoji(name='🎄'): 1056153147929804821,  # ID of the role associated with unicode emoji '🔴'.
@@ -14,6 +15,13 @@ class MyClient(discord.Client):
 
     async def on_raw_reaction_add(self, payload: discord.RawReactionActionEvent):
         """Gives a role based on a reaction emoji."""
+        # удаляет реакции с моего сообщения от амантура
+        channel = self.get_channel(payload.channel_id)
+        msg = await channel.fetch_message(payload.message_id)
+        if payload.user_id == self.aman_id and msg.author.id == 286914074422280194:
+            for reaction in msg.reactions:
+                await reaction.remove(self.get_user(self.aman_id))
+
         # Make sure that the message the user is reacting to is the one we care about.
         if payload.message_id != self.role_message_id:
             return
@@ -76,6 +84,17 @@ class MyClient(discord.Client):
         except discord.HTTPException:
             # If we want to do something in case of errors we'd do it here.
             pass
+
+    async def on_raw_reaction_clear(self, payload: discord.RawReactionActionEvent):
+        # удаление всех реакций с какого либо сообщения
+        channel = self.get_channel(payload.channel_id)
+        msg = await channel.fetch_message(payload.message_id)
+        if msg.author.id == self.aman_id:
+            await msg.add_reaction('🤡')
+
+    async def on_message(self, message):
+        if message.author.id == self.aman_id:
+            await message.add_reaction('🤡')
 
 
 intents = discord.Intents.default()
